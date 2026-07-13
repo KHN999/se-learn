@@ -35,6 +35,9 @@ import FileStreamDemo from "@/components/demos/FileStreamDemo";
 import ArrayDemo from "@/components/demos/ArrayDemo";
 import LinkedListDemo from "@/components/demos/LinkedListDemo";
 import StackQueueDemo from "@/components/demos/StackQueueDemo";
+import HashMapDemo from "@/components/demos/HashMapDemo";
+import HeapDemo from "@/components/demos/HeapDemo";
+import GraphDemo from "@/components/demos/GraphDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -161,6 +164,9 @@ function renderDemo(id: string, color: string) {
   if (id === "linked-list-ops") return <LinkedListDemo color={color} />;
   if (id === "stack") return <StackQueueDemo color={color} mode="stack" />;
   if (id === "queue") return <StackQueueDemo color={color} mode="queue" />;
+  if (id === "hashmap-buckets") return <HashMapDemo color={color} />;
+  if (id === "heap-tree") return <HeapDemo color={color} />;
+  if (id === "graph-traversal") return <GraphDemo color={color} />;
   return null;
 }
 

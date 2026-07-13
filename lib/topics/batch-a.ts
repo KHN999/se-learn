@@ -762,6 +762,15 @@ export const batchA: TopicContent[] = [
         text: "A hash map stores key-value pairs in an underlying array of 'buckets.' To store or find a key, it runs the key through a hash function that turns it into a number, then uses that number to pick a bucket. Because computing the bucket takes the same time regardless of how many entries exist, lookup, insert, and delete are all O(1) on average.",
       },
       {
+        type: "code",
+        code: 'map.set("ada", user)    // hash("ada") → bucket 4, store there\nmap.get("ada")          // hash("ada") → bucket 4, read it back — O(1)',
+        caption: "The key's hash points straight at the bucket — no scanning.",
+      },
+      {
+        type: "demo",
+        demo: "hashmap-buckets",
+      },
+      {
         type: "points",
         items: [
           "A hash function maps a key to a bucket index — the same key always lands in the same bucket.",
@@ -788,6 +797,7 @@ export const batchA: TopicContent[] = [
         "Occasional resize causes a latency spike as everything is rehashed.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "The hash map is one of the most-used data structures in all of programming — caches, database indexes, counting things, and language-level dictionaries all rest on it. Redis is essentially a giant hash map exposed over the network.",
     related: [
@@ -806,6 +816,15 @@ export const batchA: TopicContent[] = [
       {
         type: "para",
         text: "A heap is a binary tree kept in a special shape: every parent is smaller than its children (a min-heap) or larger than them (a max-heap). That single rule guarantees the smallest (or largest) item is always at the root, ready to grab. It's usually stored compactly in a plain array, with a node's children found by simple index arithmetic.",
+      },
+      {
+        type: "code",
+        code: "heap.peek()        // the smallest — O(1), it's the root\nheap.insert(2)     // add at the bottom, bubble up — O(log n)\nheap.extractMin()  // remove the root, sift down — O(log n)",
+        caption: "The extreme is free to read; changes cost about log n swaps.",
+      },
+      {
+        type: "demo",
+        demo: "heap-tree",
       },
       {
         type: "points",
@@ -833,6 +852,7 @@ export const batchA: TopicContent[] = [
         "Choosing min- vs max-heap is baked in; wanting both means two heaps or extra work.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "Heaps power priority queues in schedulers, Dijkstra's shortest-path algorithm, event simulations, and 'top-K' queries (the K largest items in a stream). Heapsort is built directly on this structure.",
     related: [
@@ -851,6 +871,15 @@ export const batchA: TopicContent[] = [
       {
         type: "para",
         text: "A graph is a set of vertices (nodes) connected by edges (links). Edges can be directed (a one-way follow) or undirected (mutual friendship), and weighted (a road with a distance) or unweighted. This one abstraction models networks, maps, dependencies, and state machines alike.",
+      },
+      {
+        type: "code",
+        code: "// adjacency list: each node → its neighbours\nA: [B, C]\nB: [A, D]\nC: [A, D, E]\n// BFS explores with a queue (level by level); DFS with a stack (deep first)",
+        caption: "Store the connections, then explore them with BFS or DFS.",
+      },
+      {
+        type: "demo",
+        demo: "graph-traversal",
       },
       {
         type: "points",
@@ -878,6 +907,7 @@ export const batchA: TopicContent[] = [
         "Many graph problems (like shortest path with negative weights, or the traveling salesman) are genuinely hard.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "Graphs underlie maps and navigation, social networks, package dependency resolution, network routing, and recommendation systems. Whenever you hear 'shortest path' or 'is there a cycle,' a graph is involved.",
     related: [
