@@ -542,6 +542,15 @@ export const batchA: TopicContent[] = [
         text: "An array stores its elements in one continuous block of memory, each the same size, one right after another. That layout is what makes indexing instant: to find element i, the computer computes 'start address + i × element size' and jumps straight there. It doesn't matter whether i is 3 or 3 million — it's one arithmetic step, O(1).",
       },
       {
+        type: "code",
+        code: "const temps = [14, 9, 22, 7, 30]\ntemps[3]           // 7 — one step, any size (O(1))\ntemps.push(18)     // add at the end (O(1))\ntemps.unshift(99)  // insert at front — shifts everything right (O(n))",
+        caption: "Index access is instant; inserting at the front is not.",
+      },
+      {
+        type: "demo",
+        demo: "array-ops",
+      },
+      {
         type: "points",
         items: [
           "Access or update by index: O(1) — direct address computation.",
@@ -567,6 +576,7 @@ export const batchA: TopicContent[] = [
         "Its strength (contiguous block) means a big array needs one big contiguous chunk of free memory.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "The array is the default collection in almost every language, and the foundation under lists, stacks, queues, and hash tables. When performance matters, its cache-friendly layout often beats fancier structures despite the same big-O.",
     related: [
@@ -585,6 +595,15 @@ export const batchA: TopicContent[] = [
       {
         type: "para",
         text: "A linked list stores each value in its own node, and each node holds a pointer to the next node. The nodes can sit anywhere in memory; the pointers stitch them into a sequence. To insert, you just create a node and rewire two pointers — no shifting, no matter how long the list is.",
+      },
+      {
+        type: "code",
+        code: "// each node holds a value and a pointer to the next\nlist.insertAtHead(5)   // new node points at the old head — O(1)\nlist.find(9)           // follow next -> next -> next until found — O(n)",
+        caption: "Rewiring pointers is cheap; reaching a value means walking the chain.",
+      },
+      {
+        type: "demo",
+        demo: "linked-list-ops",
       },
       {
         type: "points",
@@ -612,6 +631,7 @@ export const batchA: TopicContent[] = [
         "Nodes scattered in memory are cache-unfriendly, so traversal is slower than an array scan.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "You'll use linked lists indirectly through stacks, queues, and some hash-map implementations more than you'll hand-roll one. They're a staple of coding interviews precisely because pointer manipulation exercises careful reasoning.",
     related: [
@@ -630,6 +650,15 @@ export const batchA: TopicContent[] = [
       {
         type: "para",
         text: "A stack is a collection with two main operations: push (add an item to the top) and pop (remove and return the top item). You can only ever access the top — last in, first out (LIFO). Think of a stack of plates: you add and remove from the top, never the middle.",
+      },
+      {
+        type: "code",
+        code: "stack.push(1)   // [1]\nstack.push(2)   // [1, 2]\nstack.pop()     // 2 — the last one in comes out first",
+        caption: "Everything happens at the top.",
+      },
+      {
+        type: "demo",
+        demo: "stack",
       },
       {
         type: "points",
@@ -657,6 +686,7 @@ export const batchA: TopicContent[] = [
         "A fixed-capacity stack can overflow if you push past its limit.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "Stacks are everywhere under the hood: the function call stack, undo/redo, the back button's history, expression evaluation, and the depth-first traversal of trees and graphs.",
     related: [
@@ -675,6 +705,15 @@ export const batchA: TopicContent[] = [
       {
         type: "para",
         text: "A queue has two main operations: enqueue (add an item to the back) and dequeue (remove and return the item at the front). The first item added is the first one removed — first in, first out (FIFO). It works exactly like a line at a checkout.",
+      },
+      {
+        type: "code",
+        code: "queue.enqueue(1)   // [1]\nqueue.enqueue(2)   // [1, 2]\nqueue.dequeue()    // 1 — the one that waited longest goes first",
+        caption: "Add at the back, remove from the front.",
+      },
+      {
+        type: "demo",
+        demo: "queue",
       },
       {
         type: "points",
@@ -702,6 +741,7 @@ export const batchA: TopicContent[] = [
         "A carelessly array-backed queue makes dequeue O(n); implementation matters.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "Queues run through nearly every system: task queues, request buffers, and message brokers between services. Breadth-first search of a graph or tree is driven by a queue.",
     related: [

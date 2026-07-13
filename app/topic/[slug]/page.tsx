@@ -32,6 +32,9 @@ import ClassInstanceDemo from "@/components/demos/ClassInstanceDemo";
 import ErrorPropagationDemo from "@/components/demos/ErrorPropagationDemo";
 import CollectionsDemo from "@/components/demos/CollectionsDemo";
 import FileStreamDemo from "@/components/demos/FileStreamDemo";
+import ArrayDemo from "@/components/demos/ArrayDemo";
+import LinkedListDemo from "@/components/demos/LinkedListDemo";
+import StackQueueDemo from "@/components/demos/StackQueueDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -154,6 +157,10 @@ function renderDemo(id: string, color: string) {
   if (id === "error-propagation") return <ErrorPropagationDemo color={color} />;
   if (id === "collections-compare") return <CollectionsDemo color={color} />;
   if (id === "file-stream") return <FileStreamDemo color={color} />;
+  if (id === "array-ops") return <ArrayDemo color={color} />;
+  if (id === "linked-list-ops") return <LinkedListDemo color={color} />;
+  if (id === "stack") return <StackQueueDemo color={color} mode="stack" />;
+  if (id === "queue") return <StackQueueDemo color={color} mode="queue" />;
   return null;
 }
 
