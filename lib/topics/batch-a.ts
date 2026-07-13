@@ -928,6 +928,15 @@ export const batchA: TopicContent[] = [
         text: "Big-O describes how an algorithm's cost grows as the input n grows. In practice, almost everything falls into a short list of classes. Learning to spot which one you're in tells you, before running anything, whether an approach will hold up at scale.",
       },
       {
+        type: "code",
+        code: "arr[i]                            // O(1)      direct index\nbinarySearch(sorted, x)           // O(log n)  halve each step\nfor (const x of arr) { ... }      // O(n)      one pass\narr.sort()                        // O(n log n)\nfor (const a of arr)              // O(n²)     loop in a loop\n  for (const b of arr) { ... }",
+        caption: "Recognizing the shape of the code tells you its class.",
+      },
+      {
+        type: "demo",
+        demo: "class-bars",
+      },
+      {
         type: "points",
         items: [
           "O(1) constant: cost doesn't depend on n — a hash-map lookup, array indexing.",
@@ -954,6 +963,7 @@ export const batchA: TopicContent[] = [
         "It says nothing about memory, cache behavior, or actual wall-clock time.",
       ],
     },
+    tradeoffLabels: { good: "What it's good for", costs: "What it hides" },
     realWorld:
       "This vocabulary shows up in code review, system design, and interviews. The practical payoff is recognizing when a loop-inside-a-loop over growing data will become a problem, and reaching for a structure that changes its class.",
     related: [
@@ -972,6 +982,15 @@ export const batchA: TopicContent[] = [
       {
         type: "para",
         text: "Most optimizations trade one resource for the other. Spend memory to save time: cache results, precompute a lookup table, keep an index. Spend time to save memory: recompute values on demand, stream data instead of loading it all, compress it. There's rarely a free lunch — the skill is knowing which resource is scarce in your situation.",
+      },
+      {
+        type: "code",
+        code: "// spend time, save memory — recompute each call\nfunction nth(i) { return compute(i) }\n\n// spend memory, save time — cache each result\nconst cache = {}\nfunction nth(i) {\n  if (i in cache) return cache[i]\n  return (cache[i] = compute(i))\n}",
+        caption: "The same answer, recomputed vs. cached — memory bought speed.",
+      },
+      {
+        type: "demo",
+        demo: "time-space",
       },
       {
         type: "points",
@@ -999,6 +1018,7 @@ export const batchA: TopicContent[] = [
         "Trading toward less memory usually means more CPU work, and vice versa — you rarely improve both.",
       ],
     },
+    tradeoffLabels: { good: "What it enables", costs: "Common mistakes" },
     realWorld:
       "This tradeoff is behind most real performance work: adding a cache, precomputing a report, streaming a large file, or choosing a hash map (memory) over a linear scan (time). 'Should we cache this?' is the time-vs-space question in everyday form.",
     related: [

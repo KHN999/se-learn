@@ -40,7 +40,10 @@ export type DemoId =
   | "sort-bars"
   | "recursion-factorial"
   | "greedy-coins"
-  | "dp-fib";
+  | "dp-fib"
+  | "growth-curves"
+  | "class-bars"
+  | "time-space";
 
 export type ContentBlock =
   | { type: "para"; text: string }
@@ -525,6 +528,15 @@ const bigONotation: TopicContent = {
       text: "It's about the dominant term, not exact counts. An algorithm doing 3n + 50 steps is O(n) — at scale, the 3 and the 50 stop mattering next to n. We usually care about the worst case, though average case matters too (a hash map is O(1) average, O(n) worst).",
     },
     {
+      type: "code",
+      code: "// O(n) — one pass over the data\nfor (const x of list) total += x\n\n// O(n²) — a loop inside a loop\nfor (const a of list)\n  for (const b of list)\n    if (a + b === target) return [a, b]   // ~n² pairs",
+      caption: "One loop is O(n); a loop inside a loop is O(n²).",
+    },
+    {
+      type: "demo",
+      demo: "growth-curves",
+    },
+    {
       type: "points",
       items: [
         "O(1) — constant: same cost regardless of size (a hash-map lookup).",
@@ -551,6 +563,7 @@ const bigONotation: TopicContent = {
       "Says nothing about memory unless you also track space complexity.",
     ],
   },
+  tradeoffLabels: { good: "What it's good for", costs: "What it hides" },
   realWorld:
     "Big-O is the language of the difference between a table scan (O(n)) and an index lookup (O(log n)), or why a nested loop over users × orders (O(n²)) melts down as both grow. Most 'it worked in testing but died in production' failures are an unnoticed jump to a worse complexity class.",
   related: [

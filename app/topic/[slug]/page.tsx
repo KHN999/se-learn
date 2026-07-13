@@ -45,6 +45,9 @@ import SortDemo from "@/components/demos/SortDemo";
 import RecursionDemo from "@/components/demos/RecursionDemo";
 import GreedyDemo from "@/components/demos/GreedyDemo";
 import DpFibDemo from "@/components/demos/DpFibDemo";
+import BigODemo from "@/components/demos/BigODemo";
+import ClassBarsDemo from "@/components/demos/ClassBarsDemo";
+import TimeSpaceDemo from "@/components/demos/TimeSpaceDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -183,6 +186,9 @@ const DEMOS = {
   "recursion-factorial": (c: string) => <RecursionDemo color={c} />,
   "greedy-coins": (c: string) => <GreedyDemo color={c} />,
   "dp-fib": (c: string) => <DpFibDemo color={c} />,
+  "growth-curves": (c: string) => <BigODemo color={c} />,
+  "class-bars": (c: string) => <ClassBarsDemo color={c} />,
+  "time-space": (c: string) => <TimeSpaceDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {
