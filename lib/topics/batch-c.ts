@@ -670,6 +670,11 @@ export const batchC: TopicContent[] = [
         text: "SQL (relational) databases store data in tables with a fixed schema and connect them with joins and foreign keys. They're built around strong consistency and transactions: the classic ACID guarantees. NoSQL is an umbrella for everything else — document stores, key-value stores, wide-column, graph — that trade some of that rigidity for flexibility or horizontal scale.",
       },
       {
+        type: "code",
+        code: "-- SQL: one product split across normalized rows, recombined with a join\nproducts(id, name)              7, 'Runner'\nvariants(product_id, size, stock)   7, 42, 3    7, 43, 0\n\n// NoSQL document: the same product as one self-contained record\n{ id: 7, name: 'Runner',\n  variants: [ { size: 42, stock: 3 }, { size: 43, stock: 0 } ] }",
+        caption: "Relational splits an entity across tables and joins it back; a document store keeps it whole.",
+      },
+      {
         type: "points",
         items: [
           "Relational (Postgres, MySQL): fixed schema, joins, ACID transactions, strong consistency.",
@@ -701,6 +706,7 @@ export const batchC: TopicContent[] = [
         "Picking NoSQL for the wrong reason ('scale') buys complexity you don't need.",
       ],
     },
+    tradeoffLabels: { good: "What they're good at", costs: "Where they bite" },
     realWorld:
       "This decision comes up at the start of most projects, and the common mistake is choosing NoSQL for scale you'll never reach while giving up transactions you'll miss on day one. Start relational unless you can name the specific need something else solves.",
     related: [
@@ -721,6 +727,11 @@ export const batchC: TopicContent[] = [
       {
         type: "para",
         text: "MongoDB stores documents — nested, JSON-like structures (technically BSON) — grouped into collections. There's no enforced schema, so two documents in the same collection can have different fields. A whole product, with its nested variants and specs, lives in one document you fetch in one read, no joins required.",
+      },
+      {
+        type: "code",
+        code: "db.products.insertOne({\n  name: \"Runner\",\n  price: 89,\n  variants: [\n    { size: 42, color: \"blue\", stock: 3 },\n    { size: 43, color: \"red\",  stock: 0 }\n  ]\n})\n// the next document can carry entirely different fields — no migration needed",
+        caption: "One document holds the whole product, nested variants and all.",
       },
       {
         type: "points",
@@ -754,6 +765,7 @@ export const batchC: TopicContent[] = [
         "Easy to end up with messy, inconsistent documents over time.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "MongoDB fits well for content, catalogs, and rapidly-changing early-stage schemas where each record is largely self-contained. It fits poorly when your data is highly relational and you need to join and aggregate across it constantly — that's what relational databases do best.",
     related: [
@@ -774,6 +786,11 @@ export const batchC: TopicContent[] = [
       {
         type: "para",
         text: "Redis keeps its data in memory (RAM), which is why it answers in microseconds rather than milliseconds. At its simplest it's a giant key-value map: SET a key to a value, GET it back. But it also has native data structures — lists, sets, sorted sets, hashes, counters — so it can do more than plain caching.",
+      },
+      {
+        type: "code",
+        code: "SET  homepage:v1  \"<cached html>\"  EX 60   # store, auto-expire after 60s\nGET  homepage:v1                           # microsecond read, no DB hit\nINCR requests:user:42                      # atomic counter for rate limiting\n\n# on a cache miss: read from the DB, SET it here, serve the next 1000 from RAM",
+        caption: "Cache an expensive result with a TTL, then serve reads from memory instead of the database.",
       },
       {
         type: "points",
@@ -807,6 +824,7 @@ export const batchC: TopicContent[] = [
         "Adds an extra moving piece to your infrastructure to operate and monitor.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "Redis is one of the most common pieces of infrastructure in web systems: sitting in front of the database as a cache, holding session data, enforcing rate limits, and acting as a lightweight message broker. It's a workhorse you meet almost everywhere at scale.",
     related: [
@@ -827,6 +845,11 @@ export const batchC: TopicContent[] = [
       {
         type: "para",
         text: "Elasticsearch is built around an inverted index: instead of storing documents and scanning them, it stores, for every word, the list of documents that contain it. When you search 'running shoes', it looks up each word and instantly gets the matching documents, then ranks them by relevance. It also handles typos, synonyms, stemming (run/running), and partial matches.",
+      },
+      {
+        type: "code",
+        code: "GET /products/_search\n{ \"query\": { \"match\": {\n    \"name\": { \"query\": \"runing shoes\", \"fuzziness\": \"AUTO\" }\n} } }\n\n// matches \"running shoes\" despite the typo, best hits ranked first\n// inverted index:  \"running\" → [7, 12, 30]   \"shoes\" → [7, 30, 44]",
+        caption: "A fuzzy full-text match tolerates the typo; the inverted index makes it fast.",
       },
       {
         type: "points",
@@ -860,6 +883,7 @@ export const batchC: TopicContent[] = [
         "Not a transactional store — don't use it as your primary database.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "You meet Elasticsearch behind almost any 'search this site' box, and just as often in the ELK stack (Elasticsearch, Logstash, Kibana) collecting and searching application logs. It's the default answer for full-text search and log analytics at scale.",
     related: [
