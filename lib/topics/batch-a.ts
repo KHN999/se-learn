@@ -410,88 +410,120 @@ export const batchA: TopicContent[] = [
   },
   {
     slug: "collections",
-    tagline: "Standard containers for holding many values and getting them back out.",
+    tagline: "Standard containers for holding many values — and choosing the right one.",
     problem:
-      "You need to keep track of every item in a shopping cart. You could make item1, item2, item3 variables, but you don't know how many there'll be, and you can't loop over separately named variables. The moment a program handles 'many of something' — users, messages, results — it needs a container built for holding groups of values and iterating over them.",
+      "You need to track every item in a shopping cart. You could make item1, item2, item3 variables, but you don't know how many there'll be, and you can't loop over separately named names. The moment a program handles 'many of something' — users, messages, results — it needs a container built for holding groups of values, and the container you pick decides which operations are fast.",
     how: [
       {
         type: "para",
-        text: "Collections are the general-purpose containers a language's standard library gives you: lists, sets, maps, and their variants. They differ in what they guarantee — whether order is preserved, whether duplicates are allowed, and how fast lookup, insertion, and removal are. Picking the right one is mostly about matching those guarantees to how you'll access the data.",
+        text: "Collections are the general-purpose containers your language's standard library gives you: lists, sets, maps, and their variants. They differ in what they guarantee — whether order is kept, whether duplicates are allowed, and how fast lookup, insertion, and removal are. Picking the right one is mostly matching those guarantees to how you'll access the data.",
+      },
+      {
+        type: "code",
+        code: 'const cart = ["apple", "banana", "apple"]   // List: ordered, duplicates OK\ncart.push("cherry")                          // add to the end\ncart[0]                                       // "apple" — access by position\n\nconst seen = new Set(cart)                    // Set: unique membership\nseen.has("apple")                             // true — no scanning\n\nconst prices = new Map()                      // Map: key → value\nprices.set("apple", 3)\nprices.get("apple")                           // 3 — fast lookup by key',
+        caption: "Three containers, three different questions they answer well.",
+      },
+      {
+        type: "para",
+        text: "The choice comes down to the question you ask most. Need order and duplicates? A list. Need fast 'is this in here?' or 'no duplicates'? A set. Need to look a value up by a key? A map. Asking a list 'does this exist?' means scanning every element (O(n)); a set or map answers instantly (O(1)). Watch the difference:",
+      },
+      {
+        type: "demo",
+        demo: "collections-compare",
       },
       {
         type: "points",
         items: [
           "List / dynamic array: ordered, allows duplicates, fast access by position, grows as needed.",
-          "Set: no duplicates, fast 'is this in here?' checks, usually unordered.",
+          "Set: no duplicates, fast membership checks, often unordered.",
           "Map / dictionary: stores key-to-value pairs, fast lookup by key.",
           "Queue / stack: restrict access to the ends, for first-in-first-out or last-in-first-out order.",
         ],
       },
       {
         type: "note",
-        text: "The right choice depends on the operation you do most. If you constantly ask 'does this exist?', a set or map beats scanning a list every time.",
+        text: "Sets and maps are usually built on a hash map, which is what makes their lookups O(1). That speed assumes good, stable keys — which is why mutable objects make poor keys.",
       },
     ],
+    tradeoffLabels: { good: "What it enables", costs: "Common mistakes" },
     tradeoffs: {
       good: [
-        "Handle any number of items with one variable and a loop.",
-        "Built-in, tested implementations save you from reinventing data structures.",
-        "Choosing the right collection makes the common operation fast for free.",
+        "Holding any number of items in one variable and looping over them.",
+        "Reusing tested, fast implementations instead of building data structures yourself.",
+        "Making the operation you do most O(1) by choosing the right container.",
       ],
       costs: [
-        "The wrong collection can turn an O(1) operation into an O(n) one — for example, membership checks on a list.",
-        "Each has memory overhead beyond the raw values it stores.",
-        "Some collections make no ordering promise, which surprises people who assume insertion order.",
+        "Using a list for membership checks (O(n)) where a set or map would be O(1).",
+        "Assuming an order that some collections don't promise.",
+        "Mutating a collection while iterating over it.",
+        "Using mutable or identity-compared objects as map/set keys.",
+        "Forgetting the memory overhead of very large collections.",
       ],
     },
     realWorld:
       "Choosing between a list, a set, and a map is a decision you make constantly. A surprising number of slow functions come down to using a list where a set or map would have made lookups instant.",
     related: [
       { slug: "array", note: "The contiguous structure most lists are built on." },
-      { slug: "hash-map", note: "The structure behind maps and sets." },
+      { slug: "hash-map", note: "The structure behind maps and sets — and their O(1)." },
       { slug: "linked-list", note: "An alternative list layout with different tradeoffs." },
       { slug: "big-o-notation", note: "How the choice of collection changes operation cost." },
+      { slug: "stack", note: "A collection with last-in-first-out access." },
+      { slug: "queue", note: "A collection with first-in-first-out access." },
     ],
   },
   {
     slug: "file-io",
     tagline: "Reading and writing data that outlives the program's memory.",
     problem:
-      "Your program computes a report and prints it, then exits — and the report is gone. Everything in memory disappears when the process ends. To keep data around, log what happened, or read a file someone gave you, the program has to talk to storage. And a naive read of a 5 GB file into memory at once will crash on a machine with 8 GB of RAM.",
+      "Your program computes a report, prints it, then exits — and the report is gone. Everything in memory disappears when the process ends. To keep data around, log what happened, or read a file someone gave you, the program has to talk to storage. And a naive read of a 5 GB file into memory at once will crash a machine with 8 GB of RAM.",
     how: [
       {
         type: "para",
-        text: "File I/O is the set of operations for moving data between your program and persistent storage. The usual cycle is open (ask the OS for a handle to the file and declare your intent — read, write, append), then read or write through that handle, then close (release it). The OS mediates all of this and enforces permissions.",
+        text: "File I/O moves data between your program and persistent storage. The usual cycle is open (ask the OS for a handle and declare your intent — read, write, append), then read or write through that handle, then close (flush and release it). The OS mediates all of it and enforces permissions.",
+      },
+      {
+        type: "code",
+        code: 'const text = readFile("config.json")     // whole file into memory — simple\nsave("out.txt", text)                     // write it back out\n\n// streaming: process a chunk at a time, memory stays flat\nfor (const line of readLines("huge.log")) {\n  if (line.includes("ERROR")) count++\n}',
+        caption: "Read it all at once, or stream it a piece at a time.",
+      },
+      {
+        type: "para",
+        text: "Reading a whole file is simple but holds all of it in memory — fine for a config file, fatal for a 5 GB log. Streaming reads a chunk at a time, so memory stays flat no matter how big the file is. That difference is the whole game with large files:",
+      },
+      {
+        type: "demo",
+        demo: "file-stream",
       },
       {
         type: "points",
         items: [
-          "Reading a whole file at once is simple but only safe when the file is small.",
-          "Streaming reads a chunk at a time, so memory use stays flat regardless of file size.",
-          "Text mode decodes bytes into characters using an encoding; binary mode gives you the raw bytes.",
+          "Text mode decodes bytes into characters using an encoding (UTF-8); binary mode gives raw bytes — read one as the other and data corrupts.",
           "Writes are often buffered — data may sit in memory until you flush or close, so a crash can lose it.",
+          "Disk is far slower than memory, so batch reads and writes rather than doing them byte by byte.",
         ],
       },
       {
         type: "note",
-        text: "Always close files (or use a language construct that closes them for you). Leaked file handles are a finite resource — run out and the program can no longer open anything.",
+        text: "Always close files (or use a language construct — with, using, defer — that closes them for you). Leaked file handles are a finite resource: run out and the program can no longer open anything.",
       },
     ],
+    tradeoffLabels: { good: "What it enables", costs: "Common mistakes" },
     tradeoffs: {
       good: [
-        "Data persists across runs and can be shared with other programs and people.",
-        "Streaming lets you process files far larger than available memory.",
-        "It's a universal interface — logs, config, exports, imports all flow through it.",
+        "Data that persists across runs and can be shared with other programs and people.",
+        "Processing files far larger than memory, by streaming them.",
+        "A universal interface — logs, config, exports, and imports all flow through it.",
       ],
       costs: [
-        "Disk is orders of magnitude slower than memory; I/O is a common bottleneck.",
-        "Many things can fail: missing file, no permission, full disk, disk yanked mid-write.",
-        "Buffering means a write isn't durable until flushed — a crash can drop it.",
-        "Text encoding mismatches quietly corrupt data (the classic mojibake).",
+        "Reading a huge file whole and running out of memory.",
+        "Forgetting to close — leaked handles eventually block all further opens.",
+        "Assuming a buffered write is durable before flush/close (a crash drops it).",
+        "Reading binary as text, or with the wrong encoding, and corrupting data (mojibake).",
+        "Blocking the whole program on slow disk I/O when it could run in the background.",
       ],
     },
     realWorld:
-      "You meet file I/O whenever you load config, write logs, import a CSV, or save user uploads. Its slowness is why so much engineering effort goes into caching and into doing work in memory instead of hitting disk.",
+      "You meet file I/O whenever you load config, write logs, import a CSV, or save user uploads. Its slowness is exactly why so much engineering effort goes into caching and into doing work in memory instead of hitting disk.",
     related: [
       { slug: "file-systems-permissions", note: "The OS layer that governs what files you can touch." },
       { slug: "error-handling", note: "File operations fail often and must be handled." },

@@ -30,6 +30,8 @@ import ControlFlowDemo from "@/components/demos/ControlFlowDemo";
 import CallStackDemo from "@/components/demos/CallStackDemo";
 import ClassInstanceDemo from "@/components/demos/ClassInstanceDemo";
 import ErrorPropagationDemo from "@/components/demos/ErrorPropagationDemo";
+import CollectionsDemo from "@/components/demos/CollectionsDemo";
+import FileStreamDemo from "@/components/demos/FileStreamDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -150,6 +152,8 @@ function renderDemo(id: string, color: string) {
   if (id === "call-stack") return <CallStackDemo color={color} />;
   if (id === "class-instances") return <ClassInstanceDemo color={color} />;
   if (id === "error-propagation") return <ErrorPropagationDemo color={color} />;
+  if (id === "collections-compare") return <CollectionsDemo color={color} />;
+  if (id === "file-stream") return <FileStreamDemo color={color} />;
   return null;
 }
 
