@@ -18,7 +18,9 @@ import { batchI } from "@/lib/topics/batch-i";
 export type ContentBlock =
   | { type: "para"; text: string }
   | { type: "points"; items: string[] }
-  | { type: "note"; text: string };
+  | { type: "note"; text: string }
+  | { type: "code"; code: string; caption?: string }
+  | { type: "demo"; demo: string };
 
 export type TopicContent = {
   slug: string;

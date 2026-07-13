@@ -3,50 +3,61 @@ import type { TopicContent } from "@/lib/topics";
 export const batchA: TopicContent[] = [
   {
     slug: "variables-types",
-    tagline: "Names for values, and the rules for what each value can do.",
+    tagline:
+      "Names for values — and why the computer cares what kind of value each one holds.",
     problem:
-      "A signup form gives you the user's age as the text \"30\". Later you write age + 1 expecting 31, but you get \"301\" — the language glued the strings together instead of adding. The bug isn't in your math; it's that the value was never a number to begin with. To reason about a program at all, you need to know what each name currently holds and what operations that kind of value allows.",
+      "A signup form gives you the user's age as the text \"30\". You write age + 1 expecting 31 and get \"301\" — the language joined text instead of adding numbers. The bug isn't your math; the value was never a number. To reason about a program at all, you need to know what each name currently holds and what that kind of value lets you do.",
+    demo: "coercion",
     how: [
       {
         type: "para",
-        text: "A variable is a name bound to a value stored somewhere in memory. When you write x = 5, you're telling the language 'let the name x stand for this value.' Reassigning the name points it at a different value; it doesn't change the old one.",
+        text: "A variable is a name bound to a value. Assignment associates the name with a value; exactly how that value is stored or referenced is up to the language. Every value has a type — a kind, such as number, text (string), or true/false (boolean) — and the type decides what an operation like + actually means.",
+      },
+      {
+        type: "code",
+        code: 'age = "30"   // a string: the characters 3 and 0\nage + 1      // "301"  — + joins text\n\nage = 30     // a number\nage + 1      // 31    — + adds',
+        caption: "Same + operator, two different meanings — decided by the type.",
       },
       {
         type: "para",
-        text: "A type is the answer to 'what kind of value is this, and what can I do with it?' Integers can be added and divided; strings can be concatenated and searched; booleans gate an if. The type tells the runtime how to interpret the raw bits and which operations are legal. Statically typed languages check these rules before the program runs; dynamically typed ones check them as each line executes.",
+        text: "Types fall into a few familiar categories, though the exact rules vary by language: simple values like numbers and booleans, and composite values like lists/arrays and objects/maps that group other values. Strings are simple values in some languages and objects in others — so treat these as common categories, not universal law.",
       },
       {
-        type: "points",
-        items: [
-          "Primitive types hold a single value: numbers, booleans, characters.",
-          "Composite types group values: strings, arrays, objects.",
-          "Static typing catches type errors at compile time; dynamic typing catches them at runtime, if at all.",
-          "Type conversion (casting) turns one type into another — sometimes silently, which is where surprises like \"30\" + 1 come from.",
-        ],
+        type: "para",
+        text: "Two names can end up referring to the same underlying value, and this is where surprises live. Simple values are usually copied, so this rarely bites. But for objects and other composite values, a name often holds a reference to a shared thing: reassign the name and it points somewhere new; mutate the thing and every name referring to it sees the change. Confusing 'change what the name points to' with 'change the thing it points to' is a classic bug — step through it below.",
+      },
+      {
+        type: "demo",
+        demo: "references",
       },
       {
         type: "note",
-        text: "A variable's type and its scope (where the name is visible) are separate ideas. A well-typed value used outside its scope is still a bug.",
+        text: "Languages differ in how much they check and convert types. Statically typed languages check many rules before the program runs; dynamically typed ones check at runtime and may quietly convert (coerce) one type to another — which is how \"30\" + 1 becomes \"301\". Neither removes type mistakes; they change when you find out about them.",
+      },
+      {
+        type: "para",
+        text: "Where a name is usable is its scope — usually the block or function it's declared in. A variable declared inside a function doesn't exist outside it, which keeps different parts of a program from clobbering each other's names.",
       },
     ],
     tradeoffs: {
       good: [
-        "Types document intent — a function taking an int clearly wants a number.",
-        "Static checking catches whole categories of bugs before you ever run the code.",
-        "The runtime can store and process values more efficiently when it knows their type.",
+        "Types catch whole classes of mistakes — statically before the code runs, dynamically at the moment of the bad operation.",
+        "They document intent: a function that takes a number tells you what it expects.",
+        "They let editors autocomplete, refactor, and flag errors as you type.",
       ],
       costs: [
-        "Static types add ceremony and can slow early prototyping.",
-        "Dynamic typing is flexible but pushes type bugs to runtime, often in production.",
-        "Implicit conversions between types are a classic source of silent, hard-to-spot errors.",
+        "Static typing adds annotations and a build step — though type inference removes much of the verbosity.",
+        "Dynamic typing is fast to write but lets type errors reach runtime unless tests and input validation catch them.",
+        "Implicit conversion is convenient but hides bugs like \"30\" + 1; converting explicitly avoids them.",
       ],
     },
     realWorld:
-      "Every program starts here. Most 'it worked on my machine but broke on real data' bugs trace back to a value being a different type than assumed — a number that arrived as a string, a null where an object was expected.",
+      "The everyday version: a value from a form, a URL, or a JSON response arrives as a string, gets used as a number, and either concatenates (\"301\") or compares wrongly. Converting inputs to the right type at the edge of your program — and being explicit about it — prevents a surprising amount of grief.",
     related: [
-      { slug: "control-flow", note: "Conditions and loops branch on the values variables hold." },
-      { slug: "functions", note: "Parameters and return values are typed, named slots." },
-      { slug: "stack-vs-heap", note: "Where a variable's value actually lives in memory." },
+      { slug: "control-flow", note: "Conditions branch on booleans and truthiness — a typing question." },
+      { slug: "functions", note: "Parameters are variables; their types define the contract." },
+      { slug: "stack-vs-heap", note: "Where simple values and shared objects actually live." },
+      { slug: "collections", note: "Lists and maps are the composite types mentioned here." },
       { slug: "error-handling", note: "Type mismatches are a common source of runtime errors." },
     ],
   },

@@ -24,6 +24,8 @@ import {
 } from "@/lib/topics";
 import { AreaIcon } from "@/components/AreaIcon";
 import IndexScanDemo from "@/components/demos/IndexScanDemo";
+import CoercionDemo from "@/components/demos/CoercionDemo";
+import ReferenceDemo from "@/components/demos/ReferenceDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -93,6 +95,23 @@ function Block({ block, color }: { block: ContentBlock; color: string }) {
       </ul>
     );
   }
+  if (block.type === "code") {
+    return (
+      <figure className="overflow-hidden rounded-xl border border-line bg-bg-2">
+        <pre className="thin-scroll overflow-x-auto p-4 text-sm leading-relaxed">
+          <code className="font-mono text-dim">{block.code}</code>
+        </pre>
+        {block.caption && (
+          <figcaption className="border-t border-line px-4 py-2 text-xs text-faint">
+            {block.caption}
+          </figcaption>
+        )}
+      </figure>
+    );
+  }
+  if (block.type === "demo") {
+    return <div className="my-2">{renderDemo(block.demo, color)}</div>;
+  }
   return (
     <div
       className="flex items-start gap-3 rounded-xl border p-4"
@@ -106,6 +125,8 @@ function Block({ block, color }: { block: ContentBlock; color: string }) {
 
 function renderDemo(id: string, color: string) {
   if (id === "index-scan") return <IndexScanDemo color={color} />;
+  if (id === "coercion") return <CoercionDemo color={color} />;
+  if (id === "references") return <ReferenceDemo color={color} />;
   return null;
 }
 
