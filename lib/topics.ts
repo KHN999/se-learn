@@ -47,7 +47,16 @@ export type DemoId =
   | "sql-select"
   | "sql-join"
   | "sql-group"
-  | "txn-race";
+  | "txn-race"
+  | "http-exchange"
+  | "http-verbs"
+  | "status-codes"
+  | "cookies"
+  | "dns-resolve"
+  | "tcp-udp"
+  | "tls-handshake"
+  | "ws-push"
+  | "multiplexing";
 
 export type ContentBlock =
   | { type: "para"; text: string }

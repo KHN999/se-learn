@@ -7,10 +7,16 @@ export const batchD: TopicContent[] = [
       "The ask-and-answer format two machines use to exchange web content they've never met over.",
     problem:
       "Your browser needs the pricing page from a server it has never spoken to before. It can't just reach across and grab the file — the two programs run on different machines and need an agreed way to say 'here's exactly what I want' and 'here's what you get.' Without a shared format, every website would speak its own language and no single browser could read them all. What's the common protocol they all agree on?",
+    demo: "http-exchange",
     how: [
       {
         type: "para",
         text: "HTTP is a text-based request/response protocol. The client sends one request; the server sends back exactly one response, and that exchange is complete. A request carries a method (like GET), a path (/pricing), headers (metadata), and an optional body. A response carries a status code, headers, and usually a body — the HTML, JSON, or image you asked for.",
+      },
+      {
+        type: "code",
+        code: "GET /pricing HTTP/1.1          ← request line: method + path\nHost: shop.example.com\nAccept: text/html               ← request headers (a GET has no body)\n\nHTTP/1.1 200 OK                 ← response: a status code\nContent-Type: text/html         ← response headers\n\n<h1>Pricing</h1> …             ← response body",
+        caption: "A request is method + path + headers + optional body; a response is a status code + headers + body.",
       },
       {
         type: "para",
@@ -60,10 +66,16 @@ export const batchD: TopicContent[] = [
       "The verb that says what you want done to a resource — read it, create it, replace it, or delete it.",
     problem:
       "A single URL like /users/42 could mean several things: show me this user, update them, or delete them. The path names the thing; something else has to say what to do with it. If every action needed its own separate URL, a simple API would sprawl into thousands of one-off endpoints. How do you express intent cleanly on top of a plain address?",
+    demo: "http-verbs",
     how: [
       {
         type: "para",
         text: "HTTP methods (verbs) name the action to perform on the resource the URL identifies. GET /users/42 reads it; DELETE /users/42 removes it — same address, different intent. The common ones map neatly onto the basic data operations.",
+      },
+      {
+        type: "code",
+        code: "GET    /users/42     # read user 42        (safe, idempotent)\nPOST   /users        # create a new user   (neither safe nor idempotent)\nPUT    /users/42     # replace user 42     (idempotent)\nPATCH  /users/42     # update part of it\nDELETE /users/42     # remove user 42      (idempotent)\n\n# retrying a POST can create two users; retrying PUT/DELETE is harmless",
+        caption: "Same resource, different verbs — and which are safe to retry after a flaky network.",
       },
       {
         type: "points",
@@ -114,10 +126,16 @@ export const batchD: TopicContent[] = [
       "The three-digit number that tells the client, at a glance, how a request turned out.",
     problem:
       "A client fires off a request and gets back... something. Did it work? Was the page missing? Did the server crash, or was the client itself at fault? Reading the whole response body to figure that out is slow, and every app would parse it differently. There needs to be a single, standard signal for the outcome that any client can act on instantly.",
+    demo: "status-codes",
     how: [
       {
         type: "para",
         text: "Every HTTP response begins with a three-digit status code. The first digit sorts it into a class, so a client can react correctly even without understanding the exact specifics.",
+      },
+      {
+        type: "code",
+        code: "2xx  success       200 OK   201 Created   204 No Content\n3xx  redirect      301 Moved Permanently   304 Not Modified\n4xx  client error  400 Bad Request  401 Unauthorized  404 Not Found  429 Too Many\n5xx  server error  500 Internal Error   502 Bad Gateway   503 Unavailable\n\n# 4xx = fix your request.   5xx = the server failed (a retry may help).",
+        caption: "The first digit is the class — that alone drives caching, redirects, and retry logic.",
       },
       {
         type: "points",
@@ -167,6 +185,7 @@ export const batchD: TopicContent[] = [
       "The metadata carried alongside every request and response — including the trick that lets a stateless protocol remember you.",
     problem:
       "HTTP forgets you the instant a request ends, so how does a site keep you logged in across dozens of page loads? And how does a request say 'I can read JSON, I speak English, here's my auth token' without cramming all of that into the URL? The body carries the content; something else has to carry the context and the memory.",
+    demo: "cookies",
     how: [
       {
         type: "para",
@@ -175,6 +194,11 @@ export const batchD: TopicContent[] = [
       {
         type: "para",
         text: "A cookie is how the server plants a small piece of state in your browser to work around HTTP's forgetfulness. The server replies with Set-Cookie: session=abc; the browser stores it and automatically attaches Cookie: session=abc to every later request to that site. That thread of identity across requests is what a login session actually is.",
+      },
+      {
+        type: "code",
+        code: "# response — the server plants the cookie once\nHTTP/1.1 200 OK\nSet-Cookie: session=abc123; HttpOnly; Secure; SameSite=Lax\n\n# every later request — the browser attaches it automatically\nGET /account HTTP/1.1\nCookie: session=abc123          ← this thread of identity IS the login session",
+        caption: "Set-Cookie plants it; the browser auto-sends Cookie on every later request to that site.",
       },
       {
         type: "points",
@@ -220,6 +244,7 @@ export const batchD: TopicContent[] = [
       "The internet's phone book — turning a name people can remember into an address routers can actually reach.",
     problem:
       "You type example.com. But the network doesn't route to names — it routes to numeric IP addresses like 93.184.216.34. Nobody can memorize a number for every site they visit, and those numbers change when a site moves servers. Something has to translate the name into a current address, fast, billions of times a day. That something is DNS.",
+    demo: "dns-resolve",
     how: [
       {
         type: "para",
@@ -237,6 +262,11 @@ export const batchD: TopicContent[] = [
           "TTL controls how long an answer is trusted before it's re-checked.",
           "Record types: A (IPv4), AAAA (IPv6), CNAME (alias), MX (mail), TXT (verification).",
         ],
+      },
+      {
+        type: "code",
+        code: "$ dig shop.example.com\n\n;; QUESTION    shop.example.com   A\n;; ANSWER      shop.example.com   A   93.184.216.34   (TTL 300)\n\n# record types:  A → IPv4   AAAA → IPv6   CNAME → alias   MX → mail   TXT → verify",
+        caption: "A lookup returns an address and a TTL — how long the answer may be cached before re-checking.",
       },
       {
         type: "note",
@@ -273,6 +303,7 @@ export const batchD: TopicContent[] = [
       "Two ways to send data over a network — one reliable and ordered, one fast and best-effort.",
     problem:
       "The network can lose packets, deliver them out of order, or duplicate them. If you're loading a web page, a single missing byte corrupts it — you need every byte, in order. But on a video call, waiting to re-send a packet lost half a second ago is worse than just skipping it. No single transport is ideal for both, so there are two.",
+    demo: "tcp-udp",
     how: [
       {
         type: "para",
@@ -286,6 +317,11 @@ export const batchD: TopicContent[] = [
           "TCP fits when every byte must arrive: web, email, file transfer.",
           "UDP fits when timeliness beats completeness: voice, video, gaming, DNS.",
         ],
+      },
+      {
+        type: "code",
+        code: "TCP   handshake: SYN → SYN-ACK → ACK    then: numbered · acked · re-sent · in order\nUDP   (no handshake)                    just: fire datagrams, best-effort\n\n# TCP → web, email, file transfer   (every byte must arrive)\n# UDP → voice, video, games, DNS     (timeliness beats completeness)",
+        caption: "TCP sets up a reliable, ordered stream; UDP just sends independent datagrams.",
       },
       {
         type: "para",
@@ -326,6 +362,7 @@ export const batchD: TopicContent[] = [
       "The encryption layer that turns plain HTTP into HTTPS — private, tamper-proof, and sure who you're talking to.",
     problem:
       "Plain HTTP sends everything as readable text across a chain of networks you don't control — your router, your ISP, every hop in between. Anyone on that path can read your password, see the page, or quietly alter the response to inject ads or malware. And you have no proof the server that answered is really the one you asked for. How do you get privacy and authenticity over an untrusted network?",
+    demo: "tls-handshake",
     how: [
       {
         type: "para",
@@ -343,6 +380,11 @@ export const batchD: TopicContent[] = [
           "Asymmetric crypto exchanges the key; fast symmetric crypto protects the data after.",
           "The padlock means encrypted and authenticated — not 'this site is honest.'",
         ],
+      },
+      {
+        type: "code",
+        code: "Client → ClientHello         (supported ciphers + a random)\nServer → ServerHello + Certificate  (public key, signed by a trusted CA)\nClient → verifies the cert, agrees a shared secret  (asymmetric crypto)\nboth   → derive one symmetric session key\n──────── from here on: fast symmetric encryption ────────\nClient ⇄ Server: encrypted HTTP   (confidential · tamper-proof · authenticated)",
+        caption: "Asymmetric crypto verifies identity and agrees a key; fast symmetric crypto protects the data after.",
       },
       {
         type: "note",
@@ -379,6 +421,7 @@ export const batchD: TopicContent[] = [
       "A persistent two-way channel so the server can push data the instant it happens, not only when asked.",
     problem:
       "A chat app needs new messages to appear the moment someone sends one. But with plain HTTP the server can only answer requests — it can't speak first. So the client is stuck asking 'anything new?' every second (polling), which is wasteful, laggy, and hammers the server. How do you let the server push updates the instant they happen?",
+    demo: "ws-push",
     how: [
       {
         type: "para",
@@ -396,6 +439,11 @@ export const batchD: TopicContent[] = [
           "The connection stays open, so there's no per-message setup cost.",
           "Ideal for chat, live feeds, multiplayer, collaborative editing, and notifications.",
         ],
+      },
+      {
+        type: "code",
+        code: "GET /chat HTTP/1.1\nUpgrade: websocket             ← starts as an ordinary HTTP request…\nConnection: Upgrade\n\nHTTP/1.1 101 Switching Protocols   ← …then the connection is upgraded\n\n# now either side sends messages any time, over the SAME open connection:\nserver → { \"msg\": \"Ada joined\" }\nclient → { \"msg\": \"hello!\" }",
+        caption: "An HTTP Upgrade turns one connection into a persistent, two-way channel.",
       },
       {
         type: "note",
@@ -432,6 +480,7 @@ export const batchD: TopicContent[] = [
       "Newer HTTP versions that fix the slowness of sending many resources over one old-style connection.",
     problem:
       "A modern page pulls in a hundred files — scripts, styles, images. Under HTTP/1.1 each connection handles one request at a time, so browsers open several connections and still queue requests, and a single slow response blocks everything behind it (head-of-line blocking). Re-sending nearly identical headers on every request wastes bandwidth too. How do you move many resources over one connection without them getting in each other's way?",
+    demo: "multiplexing",
     how: [
       {
         type: "para",
@@ -449,6 +498,11 @@ export const batchD: TopicContent[] = [
           "QUIC merges transport and TLS setup, so connections start faster.",
           "All three keep identical HTTP semantics — methods, status codes, headers are unchanged.",
         ],
+      },
+      {
+        type: "code",
+        code: "HTTP/1.1  one request at a time per connection   → head-of-line blocking\nHTTP/2    many streams multiplexed over ONE TCP connection + header compression\n          (but one lost TCP packet still stalls every stream)\nHTTP/3    the same streams over QUIC/UDP → a lost packet stalls only its own stream\n\n# identical HTTP semantics (methods, status codes, headers) across all three",
+        caption: "Same HTTP, different transport — each version removes more head-of-line blocking.",
       },
       {
         type: "note",

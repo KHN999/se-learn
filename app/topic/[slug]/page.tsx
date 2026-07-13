@@ -50,6 +50,15 @@ import ClassBarsDemo from "@/components/demos/ClassBarsDemo";
 import TimeSpaceDemo from "@/components/demos/TimeSpaceDemo";
 import SqlDemo from "@/components/demos/SqlDemo";
 import TxnRaceDemo from "@/components/demos/TxnRaceDemo";
+import HttpExchangeDemo from "@/components/demos/HttpExchangeDemo";
+import HttpMethodsDemo from "@/components/demos/HttpMethodsDemo";
+import StatusCodeDemo from "@/components/demos/StatusCodeDemo";
+import CookieDemo from "@/components/demos/CookieDemo";
+import DnsResolveDemo from "@/components/demos/DnsResolveDemo";
+import TcpUdpDemo from "@/components/demos/TcpUdpDemo";
+import TlsHandshakeDemo from "@/components/demos/TlsHandshakeDemo";
+import WsPushDemo from "@/components/demos/WsPushDemo";
+import MultiplexingDemo from "@/components/demos/MultiplexingDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -195,6 +204,15 @@ const DEMOS = {
   "sql-join": (c: string) => <SqlDemo color={c} focus="join" />,
   "sql-group": (c: string) => <SqlDemo color={c} focus="group" />,
   "txn-race": (c: string) => <TxnRaceDemo color={c} />,
+  "http-exchange": (c: string) => <HttpExchangeDemo color={c} />,
+  "http-verbs": (c: string) => <HttpMethodsDemo color={c} />,
+  "status-codes": (c: string) => <StatusCodeDemo color={c} />,
+  "cookies": (c: string) => <CookieDemo color={c} />,
+  "dns-resolve": (c: string) => <DnsResolveDemo color={c} />,
+  "tcp-udp": (c: string) => <TcpUdpDemo color={c} />,
+  "tls-handshake": (c: string) => <TlsHandshakeDemo color={c} />,
+  "ws-push": (c: string) => <WsPushDemo color={c} />,
+  "multiplexing": (c: string) => <MultiplexingDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {
