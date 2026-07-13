@@ -325,6 +325,11 @@ export const batchC: TopicContent[] = [
         text: "A table is a set of rows, and every row has the same columns. Each column has a fixed data type — INTEGER, TEXT, TIMESTAMP, BOOLEAN — and the database rejects anything that doesn't fit. The schema is this whole definition: the tables, their columns, the types, and the constraints that keep data valid.",
       },
       {
+        type: "code",
+        code: "CREATE TABLE users (\n  id     INTEGER PRIMARY KEY,\n  email  TEXT      NOT NULL UNIQUE,\n  name   TEXT      NOT NULL,\n  age    INTEGER,\n  joined TIMESTAMP DEFAULT now()\n)",
+        caption: "The schema declares the shape every row must fit.",
+      },
+      {
         type: "points",
         items: [
           "Data types: the database refuses to store text where a number belongs.",
@@ -356,6 +361,7 @@ export const batchC: TopicContent[] = [
         "Rigid structure fits awkwardly around data that's genuinely irregular.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "Every relational database starts with schema design — the tables and columns are the foundation everything else queries against. Getting it roughly right early saves painful migrations later; getting it badly wrong means reshaping data you already depend on.",
     related: [
@@ -376,6 +382,10 @@ export const batchC: TopicContent[] = [
       {
         type: "para",
         text: "SELECT declares which columns you want. FROM names the table. WHERE filters the rows to only those matching a condition. ORDER BY sorts the result. You describe what you want, not how to fetch it — the database figures out the efficient way to get there.",
+      },
+      {
+        type: "demo",
+        demo: "sql-select",
       },
       {
         type: "points",
@@ -408,6 +418,7 @@ export const batchC: TopicContent[] = [
         "Naive string-building queries open the door to SQL injection.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "This is the most-run kind of query in almost every application — every page that shows a list of anything is a SELECT with a WHERE and probably an ORDER BY and LIMIT behind it.",
     related: [
@@ -428,6 +439,11 @@ export const batchC: TopicContent[] = [
       {
         type: "para",
         text: "Three statements cover writes. INSERT adds new rows. UPDATE changes values in rows that match a condition. DELETE removes rows that match a condition. UPDATE and DELETE both take a WHERE clause, and that clause is everything: it decides which rows are affected.",
+      },
+      {
+        type: "code",
+        code: "INSERT INTO orders (customer_id, total) VALUES (7, 99.00)\nUPDATE orders SET address = '...' WHERE id = 42\nDELETE FROM orders WHERE id = 42\n\n-- the WHERE is everything: leave it off and UPDATE/DELETE hit EVERY row",
+        caption: "INSERT adds; UPDATE and DELETE change only the rows the WHERE matches.",
       },
       {
         type: "points",
@@ -460,6 +476,7 @@ export const batchC: TopicContent[] = [
         "Concurrent writes to the same rows can block each other or deadlock.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "Every 'save', 'edit', and 'delete' button in an app ultimately runs one of these. The habit of writing the WHERE clause first — and running a SELECT with it to preview which rows you'll hit — has saved countless engineers from a data catastrophe.",
     related: [
@@ -480,6 +497,10 @@ export const batchC: TopicContent[] = [
       {
         type: "para",
         text: "A JOIN matches rows from two tables using a condition — usually that a column in one equals a column in the other, like orders.customer_id = customers.id. For each matching pair, the database produces one combined row containing columns from both tables.",
+      },
+      {
+        type: "demo",
+        demo: "sql-join",
       },
       {
         type: "points",
@@ -512,6 +533,7 @@ export const batchC: TopicContent[] = [
         "Joins across huge tables can be memory- and CPU-heavy.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "Joins are the everyday tool for reading normalized data — nearly any report or list that mixes information from two entities is a join. They're also the first thing to check when a query is slow: an un-indexed join column is a classic cause.",
     related: [
@@ -532,6 +554,10 @@ export const batchC: TopicContent[] = [
       {
         type: "para",
         text: "GROUP BY partitions rows into groups that share a value — one group per region, say. Then an aggregate function collapses each group into a single value: COUNT how many, SUM the totals, AVG the average, MIN and MAX the extremes. The result has one row per group instead of one per original row.",
+      },
+      {
+        type: "demo",
+        demo: "sql-group",
       },
       {
         type: "points",
@@ -563,6 +589,7 @@ export const batchC: TopicContent[] = [
         "Every non-aggregated column must be in GROUP BY, which surprises beginners.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "Every dashboard, analytics report, and 'total by category' view is a GROUP BY under the hood. It's the bridge between raw transactional rows and the summarized numbers a business actually looks at.",
     related: [
@@ -582,6 +609,11 @@ export const batchC: TopicContent[] = [
       {
         type: "para",
         text: "A foreign key is a constraint declaring that a column's values must match an existing value in another table — usually that table's primary key. Once orders.customer_id is a foreign key referencing customers.id, the database rejects any order whose customer_id doesn't correspond to a real customer. The relationship is enforced, not just hoped for.",
+      },
+      {
+        type: "code",
+        code: "CREATE TABLE orders (\n  id          INTEGER PRIMARY KEY,\n  customer_id INTEGER NOT NULL REFERENCES customers(id),\n  total       NUMERIC\n)\n\n-- an order pointing at a customer that doesn't exist is now rejected",
+        caption: "REFERENCES makes the database enforce the link, not just hope for it.",
       },
       {
         type: "points",
@@ -615,6 +647,7 @@ export const batchC: TopicContent[] = [
         "They add coupling that can complicate sharding a database across machines.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "Foreign keys are how a relational schema stays trustworthy over years of writes. Some high-scale systems deliberately drop them and enforce integrity in application code instead, trading the safety guarantee for write speed and easier sharding.",
     related: [

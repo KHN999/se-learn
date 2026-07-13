@@ -43,7 +43,10 @@ export type DemoId =
   | "dp-fib"
   | "growth-curves"
   | "class-bars"
-  | "time-space";
+  | "time-space"
+  | "sql-select"
+  | "sql-join"
+  | "sql-group";
 
 export type ContentBlock =
   | { type: "para"; text: string }

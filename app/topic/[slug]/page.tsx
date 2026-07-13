@@ -48,6 +48,7 @@ import DpFibDemo from "@/components/demos/DpFibDemo";
 import BigODemo from "@/components/demos/BigODemo";
 import ClassBarsDemo from "@/components/demos/ClassBarsDemo";
 import TimeSpaceDemo from "@/components/demos/TimeSpaceDemo";
+import SqlDemo from "@/components/demos/SqlDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -189,6 +190,9 @@ const DEMOS = {
   "growth-curves": (c: string) => <BigODemo color={c} />,
   "class-bars": (c: string) => <ClassBarsDemo color={c} />,
   "time-space": (c: string) => <TimeSpaceDemo color={c} />,
+  "sql-select": (c: string) => <SqlDemo color={c} focus="filter" />,
+  "sql-join": (c: string) => <SqlDemo color={c} focus="join" />,
+  "sql-group": (c: string) => <SqlDemo color={c} focus="group" />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {
