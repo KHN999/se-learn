@@ -28,6 +28,7 @@ import CoercionDemo from "@/components/demos/CoercionDemo";
 import ReferenceDemo from "@/components/demos/ReferenceDemo";
 import ControlFlowDemo from "@/components/demos/ControlFlowDemo";
 import CallStackDemo from "@/components/demos/CallStackDemo";
+import ClassInstanceDemo from "@/components/demos/ClassInstanceDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -146,6 +147,7 @@ function renderDemo(id: string, color: string) {
   if (id === "references") return <ReferenceDemo color={color} />;
   if (id === "control-flow-tracer") return <ControlFlowDemo color={color} />;
   if (id === "call-stack") return <CallStackDemo color={color} />;
+  if (id === "class-instances") return <ClassInstanceDemo color={color} />;
   return null;
 }
 

@@ -274,42 +274,73 @@ export const batchA: TopicContent[] = [
   },
   {
     slug: "classes-objects",
-    tagline: "Bundling related data with the operations that act on it.",
+    tagline: "Bundling data with the operations that act on it — and controlling how it changes.",
     problem:
-      "You're passing a user's name, email, age, and address around as four separate variables. Every function that touches a user needs all four in its parameter list, and it's easy to pass them in the wrong order or forget one. The data clearly belongs together, but nothing in the code says so — and nothing stops another part of the program from setting the age to -5.",
+      "You're passing a user's name, email, age, and address around as four separate variables. Every function that touches a user needs all four, it's easy to pass them in the wrong order or forget one, and nothing stops some far-off line from setting the age to -5. The data clearly belongs together and has rules — but nothing in the code says so.",
     how: [
       {
         type: "para",
-        text: "A class is a blueprint that groups related data (fields) with the functions that operate on that data (methods). An object is a concrete instance made from that blueprint — one actual user, with its own name and email. Instead of four loose variables, you have one user object that carries its data and knows what can be done to it.",
+        text: "A class is a blueprint that groups related data (fields) with the operations that act on it (methods). An object — an instance — is one concrete thing built from that blueprint, with its own field values. Instead of four loose variables, you have one user object that carries its data and knows what can be done to it. (Languages vary: some are class-based, JavaScript builds objects from prototypes but offers class syntax, and some let you make objects with no class at all — but the core idea, bundling data with behavior, is everywhere.)",
+      },
+      {
+        type: "code",
+        code: 'class User {\n  constructor(name, age) {\n    this.name = name   // a field on THIS instance\n    this.age = age\n  }\n  haveBirthday() {\n    this.age = this.age + 1\n  }\n}\n\nconst ada = new User("Ada", 35)\nada.haveBirthday()      // ada.age is now 36',
+        caption: "A class, an instance, a method, and this.",
+      },
+      {
+        type: "points",
+        items: [
+          "Field — a piece of data each instance holds (name, age).",
+          "Method — an operation that acts on an instance's data (haveBirthday).",
+          "Constructor — the setup code that runs when you make a new instance.",
+          "Instance — one concrete object built from the class; each has its own values.",
+          "this — inside a method, the instance it was called on (the exact rules vary by language, and JavaScript especially has sharp edges here).",
+        ],
+      },
+      {
+        type: "demo",
+        demo: "class-instances",
       },
       {
         type: "para",
-        text: "Encapsulation is the key idea: the object controls access to its own data. Callers go through methods rather than poking at fields directly, so the object can enforce its own rules — refusing a negative age, keeping two fields in sync — no matter who is using it.",
+        text: "The deeper idea is encapsulation: the object controls access to its own data. Callers go through methods instead of poking at fields directly, so the object can enforce its own rules — refusing a negative age, keeping two fields in sync — no matter who's using it.",
+      },
+      {
+        type: "code",
+        code: 'class User {\n  setAge(value) {\n    if (value < 0) {\n      throw new Error("age can\'t be negative")\n    }\n    this.age = value\n  }\n}\n\nuser.setAge(-5)   // rejected — the object protects its own rule',
+        caption: "A guarded setter — the -5 bug can't happen through the method.",
       },
       {
         type: "note",
-        text: "Not every group of data needs a class. A plain record or dictionary is often enough; reach for a class when there's behavior and invariants to protect, not just fields to hold.",
+        text: "Not every group of data needs a class. A plain record or dictionary is often enough; reach for a class when there's behavior and rules to protect, not just fields to hold. Inheritance and polymorphism — the rest of object-oriented design — build on these basics and are covered in OOP pillars.",
       },
     ],
+    tradeoffLabels: { good: "What it enables", costs: "Common mistakes" },
     tradeoffs: {
       good: [
-        "Related data and behavior live in one place with one name.",
-        "Encapsulation lets an object guarantee its own rules stay true.",
-        "Objects model real-world things (a user, an order, a connection) in a way that reads naturally.",
+        "Keeping related data and the behavior that uses it in one place, under one name.",
+        "Encapsulation — the object guarantees its own rules stay true (no age of -5).",
+        "Modeling real things (a user, an order, a connection) so code reads naturally.",
+        "Making many independent instances from one blueprint.",
       ],
       costs: [
-        "Overuse leads to deep hierarchies and ceremony where a simple function would do.",
-        "Shared mutable objects can be changed from anywhere, causing hard-to-trace bugs.",
-        "Getting the boundaries wrong produces classes that are too big or too entangled.",
+        "God objects that hold too much data or do too many jobs.",
+        "Exposing fields directly, so any code can put the object in a bad state.",
+        "Deep inheritance hierarchies that are hard to follow — often composition is simpler.",
+        "Confusing the class (the blueprint) with an instance (one specific object).",
+        "Reaching for a class where a plain function or plain data would be clearer.",
+        "Methods that quietly mutate shared state, causing surprises elsewhere.",
       ],
     },
     realWorld:
-      "Most application code you'll read is organized into classes — a User, an OrderService, a HttpClient. Design debates about 'where should this method live?' are really about which object owns the data and behavior.",
+      "Most application code you'll read is organized into objects — a User, an OrderService, an HttpClient. The 'age = -5' class of bug is exactly what a guarded method prevents, and review debates about 'where should this method live?' are really about which object owns the data and behavior.",
     related: [
-      { slug: "oop-pillars", note: "Encapsulation, inheritance, and polymorphism build on classes." },
-      { slug: "solid", note: "Principles for designing classes that stay maintainable." },
-      { slug: "coupling-cohesion", note: "Good classes are cohesive and loosely coupled." },
+      { slug: "variables-types", note: "Fields are variables that live on an instance." },
       { slug: "functions", note: "Methods are functions that belong to an object." },
+      { slug: "oop-pillars", note: "Encapsulation, inheritance, polymorphism, abstraction." },
+      { slug: "coupling-cohesion", note: "Good objects are cohesive and loosely coupled." },
+      { slug: "design-patterns", note: "Reusable arrangements of objects and classes." },
+      { slug: "collections", note: "Plain maps/records are the lightweight alternative." },
     ],
   },
   {
