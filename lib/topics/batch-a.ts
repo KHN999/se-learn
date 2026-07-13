@@ -20,23 +20,60 @@ export const batchA: TopicContent[] = [
       },
       {
         type: "para",
-        text: "Types fall into a few familiar categories, though the exact rules vary by language: simple values like numbers and booleans, and composite values like lists/arrays and objects/maps that group other values. Strings are simple values in some languages and objects in others — so treat these as common categories, not universal law.",
+        text: "Every value has exactly one type, drawn from a small fixed set. We'll use JavaScript as the concrete reference: it has seven primitive types plus the object type, and the typeof operator reports which one you're holding. Other languages carve the space up a little differently — but the categories below are close to universal.",
+      },
+      {
+        type: "code",
+        code: 'typeof 42            // "number"     integer or decimal — all one type\ntypeof "hi"          // "string"     text\ntypeof true          // "boolean"    true / false\ntypeof undefined     // "undefined"  declared but never set\ntypeof null          // "object"     (!) a historical bug — null is its own type\ntypeof 42n           // "bigint"     integers beyond number\'s safe range\ntypeof Symbol("id")  // "symbol"     a guaranteed-unique key\ntypeof {}            // "object"     objects, arrays, dates all report this',
+        caption: "The value types, and the typeof that names each. (Functions report \"function\", but are objects too.)",
+      },
+      {
+        type: "demo",
+        demo: "type-inspector",
       },
       {
         type: "para",
-        text: "Two names can end up referring to the same underlying value, and this is where surprises live. Simple values are usually copied, so this rarely bites. But for objects and other composite values, a name often holds a reference to a shared thing: reassign the name and it points somewhere new; mutate the thing and every name referring to it sees the change. Confusing 'change what the name points to' with 'change the thing it points to' is a classic bug — step through it below.",
+        text: "The divide that matters most isn't number-versus-string — it's primitive versus object. Primitives (number, string, boolean, null, undefined, bigint, symbol) are immutable and copied by value: hand one to another name and it gets its own independent copy. Objects (including arrays and functions) are mutable and held by reference: the name stores a pointer to a shared thing, not the thing itself.",
+      },
+      {
+        type: "para",
+        text: "That reference behaviour is where the surprises live. Two names can point at the same object: reassign one name and it points somewhere new; mutate the object and every name pointing at it sees the change. Confusing 'change what the name points to' with 'change the thing it points to' is a classic bug — step through it below.",
       },
       {
         type: "demo",
         demo: "references",
       },
       {
+        type: "aside",
+        title: "Numbers aren't the arithmetic you learned",
+        blocks: [
+          {
+            type: "para",
+            text: "A number is a 64-bit floating-point value (IEEE 754). That format can't represent every decimal exactly, and it can only hold integers precisely up to a point — which produces results that look like bugs but behave the same in nearly every language.",
+          },
+          {
+            type: "code",
+            code: "0.1 + 0.2                 // 0.30000000000000004  — 0.1 has no exact binary form\n0.1 + 0.2 === 0.3         // false\nNaN === NaN               // false  — NaN is the only value not equal to itself\nNumber.MAX_SAFE_INTEGER   // 9007199254740991\n9007199254740991 + 1 === 9007199254740991 + 2   // true (!)  — use BigInt past this",
+            caption: "Compare decimals with a tolerance, not ===; reach for BigInt when integers get huge.",
+          },
+        ],
+      },
+      {
         type: "note",
-        text: "Languages differ in how much they check and convert types. Statically typed languages check many rules before the program runs; dynamically typed ones check at runtime and may quietly convert (coerce) one type to another — which is how \"30\" + 1 becomes \"301\". Neither removes type mistakes; they change when you find out about them.",
+        text: "Languages differ in how much they check and convert types. Statically typed languages check many rules before the program runs; dynamically typed ones (JavaScript, Python) check at runtime and may quietly convert — coerce — one type into another. Coercion is why \"30\" + 1 is \"301\": neither approach removes type mistakes, they just change when you find out about them.",
+      },
+      {
+        type: "code",
+        code: '"30" + 1      // "301"   + with a string concatenates\n"30" - 1      // 29      - has no string meaning, so "30" converts to a number\n"30" == 30    // true    == converts operands before comparing\n"30" === 30   // false   === checks type first — prefer it\nBoolean("")   // false   "", 0, null, undefined, NaN are "falsy"; the rest "truthy"',
+        caption: "Implicit conversion in action — and why === and explicit conversion are the safer defaults.",
       },
       {
         type: "para",
         text: "Where a name is usable is its scope — usually the block or function it's declared in. A variable declared inside a function doesn't exist outside it, which keeps different parts of a program from clobbering each other's names.",
+      },
+      {
+        type: "note",
+        text: "One consequence of immutability worth knowing: string methods never edit in place — \"hello\".toUpperCase() returns a brand-new \"HELLO\". And although primitives have no properties of their own, calling a method on one works because the language briefly wraps it in a temporary object (auto-boxing), then discards the wrapper.",
       },
     ],
     tradeoffs: {

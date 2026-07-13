@@ -59,6 +59,7 @@ import TcpUdpDemo from "@/components/demos/TcpUdpDemo";
 import TlsHandshakeDemo from "@/components/demos/TlsHandshakeDemo";
 import WsPushDemo from "@/components/demos/WsPushDemo";
 import MultiplexingDemo from "@/components/demos/MultiplexingDemo";
+import TypeInspectorDemo from "@/components/demos/TypeInspectorDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -213,6 +214,7 @@ const DEMOS = {
   "tls-handshake": (c: string) => <TlsHandshakeDemo color={c} />,
   "ws-push": (c: string) => <WsPushDemo color={c} />,
   "multiplexing": (c: string) => <MultiplexingDemo color={c} />,
+  "type-inspector": (c: string) => <TypeInspectorDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {

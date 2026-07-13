@@ -56,7 +56,8 @@ export type DemoId =
   | "tcp-udp"
   | "tls-handshake"
   | "ws-push"
-  | "multiplexing";
+  | "multiplexing"
+  | "type-inspector";
 
 export type ContentBlock =
   | { type: "para"; text: string }
