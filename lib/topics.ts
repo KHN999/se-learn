@@ -7,6 +7,7 @@ import { batchF } from "@/lib/topics/batch-f";
 import { batchG } from "@/lib/topics/batch-g";
 import { batchH } from "@/lib/topics/batch-h";
 import { batchI } from "@/lib/topics/batch-i";
+import { batchFrontend } from "@/lib/topics/batch-frontend";
 
 // Deep-dive content for built topic pages. Kept separate from curriculum.ts
 // (which is the index/navigation layer). A topic page renders this rich content
@@ -57,7 +58,18 @@ export type DemoId =
   | "tls-handshake"
   | "ws-push"
   | "multiplexing"
-  | "type-inspector";
+  | "type-inspector"
+  | "dom-tree"
+  | "box-model"
+  | "render-pipeline"
+  | "event-bubbling"
+  | "ui-state"
+  | "vdom-diff"
+  | "spa-nav"
+  | "prop-drilling"
+  | "a11y-tree"
+  | "bundler"
+  | "web-vitals";
 
 export type ContentBlock =
   | { type: "para"; text: string }
@@ -643,6 +655,7 @@ const CONTENT: TopicContent[] = [
   ...batchG,
   ...batchH,
   ...batchI,
+  ...batchFrontend,
 ];
 
 export function getTopicContent(slug: string): TopicContent | undefined {

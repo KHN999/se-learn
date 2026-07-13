@@ -149,53 +149,63 @@ export const paths: LearningPath[] = [
   {
     id: "frontend",
     title: "Frontend engineer",
-    audience: "Build what users see",
-    tagline: "The browser, the network, and making it fast and safe.",
+    audience: "Build what users see and touch",
+    tagline: "From raw HTML to a fast, accessible single-page app.",
     icon: "MonitorPlay",
-    color: "#38bdf8",
+    color: "#e879f9",
     phases: [
       {
-        title: "Foundations",
+        title: "Language foundations",
         steps: [
           t("variables-types"),
           t("functions"),
-          t("classes-objects"),
           t("collections"),
           t("git-model"),
         ],
       },
       {
-        title: "Browser and server",
+        title: "The browser basics",
+        steps: [
+          t("html-dom"),
+          t("css-layout"),
+          t("browser-rendering"),
+        ],
+      },
+      {
+        title: "Make it interactive",
+        steps: [
+          t("dom-events"),
+          t("components-state"),
+          t("reactivity-rerender"),
+        ],
+      },
+      {
+        title: "Build a real app",
+        steps: [
+          t("client-routing-spa"),
+          t("state-management"),
+          t("bundling-build"),
+        ],
+      },
+      {
+        title: "Talk to the backend",
         steps: [
           f("request"),
           t("http-request-response"),
-          t("http-methods"),
-          t("status-codes"),
-          t("headers-cookies"),
-          t("dns"),
-          t("tls-https"),
+          t("rest"),
+          t("api-auth"),
+          t("websockets"),
         ],
       },
       {
-        title: "APIs & data",
-        steps: [t("rest"), t("graphql"), t("api-auth"), t("caching-perf")],
-      },
-      {
-        title: "Real-time & search",
-        steps: [t("websockets"), f("chat"), f("search")],
-      },
-      {
-        title: "Performance",
+        title: "Ship it well",
         steps: [
-          t("latency-vs-throughput"),
-          t("compression"),
+          t("accessibility"),
+          t("web-performance"),
           t("caching-cdn"),
-          t("big-o-notation"),
+          t("xss"),
+          t("csrf"),
         ],
-      },
-      {
-        title: "Security you must know",
-        steps: [t("xss"), t("csrf"), t("input-validation"), t("sessions-cookies")],
       },
     ],
   },

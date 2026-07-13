@@ -60,6 +60,17 @@ import TlsHandshakeDemo from "@/components/demos/TlsHandshakeDemo";
 import WsPushDemo from "@/components/demos/WsPushDemo";
 import MultiplexingDemo from "@/components/demos/MultiplexingDemo";
 import TypeInspectorDemo from "@/components/demos/TypeInspectorDemo";
+import DomTreeDemo from "@/components/demos/DomTreeDemo";
+import BoxModelDemo from "@/components/demos/BoxModelDemo";
+import RenderPipelineDemo from "@/components/demos/RenderPipelineDemo";
+import EventBubblingDemo from "@/components/demos/EventBubblingDemo";
+import UiStateDemo from "@/components/demos/UiStateDemo";
+import VdomDiffDemo from "@/components/demos/VdomDiffDemo";
+import SpaNavDemo from "@/components/demos/SpaNavDemo";
+import StateMgmtDemo from "@/components/demos/StateMgmtDemo";
+import A11yDemo from "@/components/demos/A11yDemo";
+import BundlerDemo from "@/components/demos/BundlerDemo";
+import WebVitalsDemo from "@/components/demos/WebVitalsDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -215,6 +226,17 @@ const DEMOS = {
   "ws-push": (c: string) => <WsPushDemo color={c} />,
   "multiplexing": (c: string) => <MultiplexingDemo color={c} />,
   "type-inspector": (c: string) => <TypeInspectorDemo color={c} />,
+  "dom-tree": (c: string) => <DomTreeDemo color={c} />,
+  "box-model": (c: string) => <BoxModelDemo color={c} />,
+  "render-pipeline": (c: string) => <RenderPipelineDemo color={c} />,
+  "event-bubbling": (c: string) => <EventBubblingDemo color={c} />,
+  "ui-state": (c: string) => <UiStateDemo color={c} />,
+  "vdom-diff": (c: string) => <VdomDiffDemo color={c} />,
+  "spa-nav": (c: string) => <SpaNavDemo color={c} />,
+  "prop-drilling": (c: string) => <StateMgmtDemo color={c} />,
+  "a11y-tree": (c: string) => <A11yDemo color={c} />,
+  "bundler": (c: string) => <BundlerDemo color={c} />,
+  "web-vitals": (c: string) => <WebVitalsDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {
