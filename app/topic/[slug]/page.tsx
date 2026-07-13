@@ -38,6 +38,7 @@ import StackQueueDemo from "@/components/demos/StackQueueDemo";
 import HashMapDemo from "@/components/demos/HashMapDemo";
 import HeapDemo from "@/components/demos/HeapDemo";
 import GraphDemo from "@/components/demos/GraphDemo";
+import TreeDemo from "@/components/demos/TreeDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -167,6 +168,7 @@ function renderDemo(id: string, color: string) {
   if (id === "hashmap-buckets") return <HashMapDemo color={color} />;
   if (id === "heap-tree") return <HeapDemo color={color} />;
   if (id === "graph-traversal") return <GraphDemo color={color} />;
+  if (id === "bst") return <TreeDemo color={color} />;
   return null;
 }
 

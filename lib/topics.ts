@@ -433,6 +433,15 @@ const tree: TopicContent = {
       text: "That halving gives O(log n) search, insert, and delete — as long as the tree stays balanced. If it grows lopsided (e.g. inserting already-sorted data), it degrades into a list with O(n) behaviour, which is why real systems use self-balancing trees like red-black trees or B-trees.",
     },
     {
+      type: "code",
+      code: "// binary search tree: smaller left, larger right\nfind(10)    // 8 → 12 → 10 — 3 steps, each halving (O(log n))\ninorder()   // 2, 4, 6, 8, 10, 12, 14 — sorted, for free",
+      caption: "Search halves the tree each step; in-order traversal comes out sorted.",
+    },
+    {
+      type: "demo",
+      demo: "bst",
+    },
+    {
       type: "points",
       items: [
         "Balanced tree: O(log n) search, insert, and delete, with data kept in sorted order.",
@@ -453,6 +462,7 @@ const tree: TopicContent = {
       "Less cache-friendly than an array, unless kept wide like a B-tree.",
     ],
   },
+  tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
   realWorld:
     "You rarely hand-code a tree, but you use them constantly: database indexes (B-trees), the sorted maps and sets in standard libraries, file systems, and autocomplete (tries) are all trees. Understanding them is what makes 'why is this index O(log n)?' finally click.",
   related: [
