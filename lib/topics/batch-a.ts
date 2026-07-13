@@ -46,7 +46,7 @@ export const batchA: TopicContent[] = [
         "They let editors autocomplete, refactor, and flag errors as you type.",
       ],
       costs: [
-        "Static typing adds annotations and a build step — though type inference removes much of the verbosity.",
+        "Static typing adds an extra checking layer — sometimes annotations, sometimes a compile or check step — though inference and editor tooling can make it nearly invisible.",
         "Dynamic typing is fast to write but lets type errors reach runtime unless tests and input validation catch them.",
         "Implicit conversion is convenient but hides bugs like \"30\" + 1; converting explicitly avoids them.",
       ],
@@ -69,7 +69,7 @@ export const batchA: TopicContent[] = [
     how: [
       {
         type: "para",
-        text: "Every program is built from just three ways of moving through code. Sequence: run statements in order, top to bottom. Selection: choose one path or another based on a condition. Iteration: repeat a path until you're done. Everything else is a combination of these three.",
+        text: "Every program is built from just three ways of moving through code. Sequence: run statements in order, top to bottom. Selection: choose one path or another based on a condition. Iteration: repeat a path until you're done. Most ordinary program logic can be expressed by combining these three.",
       },
       {
         type: "para",
@@ -153,47 +153,123 @@ export const batchA: TopicContent[] = [
   },
   {
     slug: "functions",
-    tagline: "Wrapping a piece of work behind a name so you can reuse and reason about it.",
+    tagline: "Hiding a group of steps behind one meaningful name.",
     problem:
-      "The same ten lines that validate an email address are copy-pasted into five places in your codebase. A bug turns up in the validation, and now you have to find and fix all five copies — and you miss one. Without a way to name and reuse a block of logic, every program becomes a pile of near-duplicates that drift apart over time.",
+      "Your checkout code is a long run of steps: total the cart, apply a coupon, format a receipt — and the totalling steps show up again on the orders page. Reading it, you can't tell where one idea ends and the next begins, and fixing the totalling means hunting down every copy. You need a way to name a group of steps and reuse it, so the code reads as ideas rather than a wall of instructions.",
     how: [
       {
         type: "para",
-        text: "A function packages a block of code behind a name. You define it once, describing what inputs (parameters) it takes and what result (return value) it produces. Then you call it by name wherever you need that work done. Fix the bug once, and every caller gets the fix.",
-      },
-      {
-        type: "para",
-        text: "Calling a function pauses the caller, runs the function's body with the arguments you passed, and resumes the caller with the returned value. The machinery that tracks 'who called whom, and where to go back to' is the call stack — one frame pushed per active call.",
+        text: "A function packages a block of steps behind a name. You define it once — naming its inputs (parameters) and the result it hands back (return value) — then call it by name wherever you need it. The reuse is useful, but the deeper win is abstraction: the reader sees calculateTotal(cart) and understands the intent without reading the steps inside.",
       },
       {
         type: "points",
         items: [
-          "Parameters are named inputs; arguments are the actual values you pass in.",
-          "A return value hands a result back to the caller; a function with no return is called for its side effects.",
-          "Local variables inside a function are invisible outside it — that isolation is the point.",
-          "A pure function depends only on its inputs and changes nothing else, which makes it trivial to test.",
+          "Reuse the same logic in many places — one spot to fix and improve.",
+          "Give a process a meaningful name, so code reads as intent.",
+          "Break a big problem into smaller, nameable pieces.",
+          "Define a clear input → output contract.",
+          "Isolate behavior so it can be tested on its own.",
+        ],
+      },
+      {
+        type: "note",
+        text: "\"Duplicated code\" doesn't always mean \"make a function.\" If two similar blocks change for different reasons, forcing them into one function couples things that should move independently. Extract to share a single idea, not just to remove repeated characters.",
+      },
+      {
+        type: "para",
+        text: "Here is one function, built from the pieces you already know — a local variable and a loop:",
+      },
+      {
+        type: "code",
+        code: "function calculateTotal(prices) {\n  let total = 0\n  for (const price of prices) {\n    total = total + price\n  }\n  return total\n}\n\nconst result = calculateTotal([10, 20, 5])   // result = 35",
+        caption: "A function wrapping the checkout total you traced in Control flow.",
+      },
+      {
+        type: "code",
+        code: "calculateTotal   →  function name\nprices           →  parameter (the input's name)\n[10, 20, 5]      →  argument (the actual value passed in)\ntotal            →  local variable (exists only inside)\nreturn total     →  the output handed back\nresult           →  where the caller stores what came back",
+        caption: "Every function has these parts — name them and the rest follows.",
+      },
+      {
+        type: "para",
+        text: "In an ordinary synchronous call, the caller waits while the function body runs; when the function returns, execution resumes right after the call. The machinery that tracks who called whom and where to go back to is the call stack — one frame pushed per active call, holding that call's own local variables. Step through it:",
+      },
+      {
+        type: "demo",
+        demo: "call-stack",
+      },
+      {
+        type: "para",
+        text: "A function that only computes from its inputs and changes nothing else is called pure. One that changes something outside itself — saving to a database, printing, sending a request — has side effects:",
+      },
+      {
+        type: "code",
+        code: "// Pure: returns a result, changes nothing outside\nfunction discountedPrice(price) {\n  return price * 0.9\n}",
+      },
+      {
+        type: "code",
+        code: '// Side effects: changes something outside the function\nfunction recordPurchase(order) {\n  database.save(order)\n  console.log("Purchase recorded")\n}',
+      },
+      {
+        type: "note",
+        text: "Side effects aren't bad — a program has to save data, show output, and send messages eventually. The goal is to make them visible and deliberate, not scattered and surprising. Pure functions are generally easier to test and reason about, because the same inputs always give the same result.",
+      },
+      {
+        type: "para",
+        text: "Variables declared inside a function are local: they exist only while that call runs and are invisible outside it. That isolation is the point — it keeps one function from clobbering another's names.",
+      },
+      {
+        type: "code",
+        code: 'function greet() {\n  const message = "Hello"\n}\n\ngreet()\nconsole.log(message)   // error: message is not defined out here',
+      },
+      {
+        type: "aside",
+        title: "Advanced: closures (optional)",
+        blocks: [
+          {
+            type: "para",
+            text: "A function defined inside another can remember variables from where it was created, even after the outer function has finished. That remembered environment is called a closure.",
+          },
+          {
+            type: "code",
+            code: "function makeCounter() {\n  let count = 0\n  return function () {\n    count = count + 1\n    return count\n  }\n}\n\nconst next = makeCounter()\nnext()   // 1\nnext()   // 2  — count is remembered between calls",
+          },
+          {
+            type: "para",
+            text: "Closures power private state, callbacks, and much of everyday code. For now it's enough to know the name and the idea — you'll meet them constantly later.",
+          },
         ],
       },
     ],
+    tradeoffLabels: { good: "What it enables", costs: "Common mistakes" },
     tradeoffs: {
       good: [
-        "Write logic once, call it everywhere — one place to fix and improve.",
-        "A good name turns a block of code into a readable step in a larger story.",
-        "Small functions are easy to test in isolation.",
+        "Reusing logic — write it once, call it everywhere.",
+        "Naming a process so code reads as intent, not mechanics.",
+        "Breaking a big problem into smaller, nameable pieces.",
+        "Defining a clear input → output contract.",
+        "Isolating behavior so it can be tested on its own.",
       ],
       costs: [
-        "Each call has a small overhead (setting up and tearing down a stack frame).",
-        "Too many tiny functions can scatter logic and make a flow hard to trace.",
-        "Deeply recursive calls can exhaust the call stack and crash.",
+        "Unclear or overly generic names (doStuff, handle, process).",
+        "Too many parameters — usually a sign the function does too much.",
+        "Hidden side effects the name doesn't hint at.",
+        "One function doing several unrelated jobs.",
+        "Over-fragmenting into so many tiny functions the flow is hard to follow.",
+        "Returning inconsistent kinds of values (a number sometimes, null other times).",
+        "Leaning on global state instead of inputs and outputs.",
       ],
     },
     realWorld:
-      "Functions are the unit you think in all day. Code review comments like 'extract this into a function' or 'this function does three things' are about using them to keep each piece small, named, and testable.",
+      "Functions are the unit you think in all day. Review comments like 'extract this into a function', 'this function does three things', or 'this name doesn't say what it does' are all about using functions to keep each piece small, well-named, and testable.",
     related: [
+      { slug: "variables-types", note: "Parameters and local variables are variables." },
+      { slug: "control-flow", note: "A function contains and organizes execution." },
+      { slug: "error-handling", note: "Functions can fail and propagate errors to callers." },
+      { slug: "unit-tests", note: "Functions are the most common unit to test." },
+      { slug: "stack-vs-heap", note: "Call frames and local state live on the stack." },
+      { slug: "recursion", note: "A function that calls itself." },
       { slug: "dry", note: "Functions are the main tool for not repeating yourself." },
       { slug: "functions-one-thing", note: "The discipline of keeping each function focused." },
-      { slug: "recursion", note: "A function that calls itself." },
-      { slug: "stack-vs-heap", note: "The call stack holds each function's local state." },
     ],
   },
   {

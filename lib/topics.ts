@@ -20,7 +20,8 @@ export type ContentBlock =
   | { type: "points"; items: string[] }
   | { type: "note"; text: string }
   | { type: "code"; code: string; caption?: string }
-  | { type: "demo"; demo: string };
+  | { type: "demo"; demo: string }
+  | { type: "aside"; title: string; blocks: ContentBlock[] };
 
 export type TopicContent = {
   slug: string;

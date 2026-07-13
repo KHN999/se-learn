@@ -27,6 +27,7 @@ import IndexScanDemo from "@/components/demos/IndexScanDemo";
 import CoercionDemo from "@/components/demos/CoercionDemo";
 import ReferenceDemo from "@/components/demos/ReferenceDemo";
 import ControlFlowDemo from "@/components/demos/ControlFlowDemo";
+import CallStackDemo from "@/components/demos/CallStackDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -113,6 +114,21 @@ function Block({ block, color }: { block: ContentBlock; color: string }) {
   if (block.type === "demo") {
     return <div className="my-2">{renderDemo(block.demo, color)}</div>;
   }
+  if (block.type === "aside") {
+    return (
+      <details className="group rounded-xl border border-line bg-bg-2/40 p-4">
+        <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-text">
+          <ChevronRight className="h-4 w-4 text-faint transition-transform group-open:rotate-90" />
+          {block.title}
+        </summary>
+        <div className="mt-3 space-y-3">
+          {block.blocks.map((b, i) => (
+            <Block key={i} block={b} color={color} />
+          ))}
+        </div>
+      </details>
+    );
+  }
   return (
     <div
       className="flex items-start gap-3 rounded-xl border p-4"
@@ -129,6 +145,7 @@ function renderDemo(id: string, color: string) {
   if (id === "coercion") return <CoercionDemo color={color} />;
   if (id === "references") return <ReferenceDemo color={color} />;
   if (id === "control-flow-tracer") return <ControlFlowDemo color={color} />;
+  if (id === "call-stack") return <CallStackDemo color={color} />;
   return null;
 }
 
