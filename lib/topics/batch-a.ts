@@ -347,45 +347,65 @@ export const batchA: TopicContent[] = [
     slug: "error-handling",
     tagline: "Deciding what a program does when a step it depended on fails.",
     problem:
-      "Your code opens a config file, reads it, and parses it. But the file might not exist, the disk might be full, or the contents might be garbage. If you assume every step succeeds, the first failure either crashes the program with a cryptic message or, worse, lets it keep running on half-built data and corrupt something later. Failure isn't the exception — it's a normal path the code has to handle.",
+      "Your code opens a config file, reads it, and parses it. But the file might not exist, the disk might be full, or the contents might be garbage. If you assume every step succeeds, the first failure either crashes the program with a cryptic message or — worse — keeps running on half-built data and corrupts something later. Failure isn't the exception; it's a normal path the code has to handle.",
     how: [
       {
         type: "para",
-        text: "There are two common ways to signal that an operation failed. Exceptions interrupt the normal flow: an operation throws, and control jumps to the nearest handler (a try/catch block), skipping everything in between. Error-return values make failure ordinary data: the function returns something the caller must check, like an error object or a result that's either 'ok' or 'failed.'",
+        text: "There are two common ways to signal failure. Exceptions interrupt the normal flow: an operation throws, and control jumps to the nearest handler, skipping everything in between. Error-return values make failure ordinary data: the function returns something the caller must check — an error object, or a result that's either ok or failed. Languages differ (Go returns errors, Rust has Result, many others throw), but the choice is always the same: handle it here, or pass it up.",
+      },
+      {
+        type: "code",
+        code: 'try {\n  const text = readFile("config.json")   // might throw\n  return parse(text)\n} catch (err) {\n  return DEFAULTS                          // handle the failure\n} finally {\n  closeHandle()                            // always runs, success or failure\n}',
+        caption: "try runs the risky work, catch handles a failure, finally always cleans up.",
+      },
+      {
+        type: "para",
+        text: "If a function doesn't catch an error, it doesn't just vanish — it propagates up to whoever called that function, and up again, until something catches it or it reaches the top and crashes the program. Choose where to put the catch: at the layer that can actually do something useful. Step through it:",
+      },
+      {
+        type: "demo",
+        demo: "error-propagation",
       },
       {
         type: "points",
         items: [
-          "Handle an error where you can actually do something about it — retry, use a default, show a message.",
-          "If you can't handle it here, let it propagate up to code that can.",
-          "Fail fast on programming bugs (a null that should never be null); recover gracefully from expected conditions (a network blip).",
-          "Never swallow an error silently — an empty catch block hides the very information you'll need to debug.",
+          "throw raises an error; try/catch handles it; finally always runs, for cleanup.",
+          "Handle an error where you can act on it — retry, use a default, show a message.",
+          "Fail fast on programming bugs (a null that should never be null) rather than limping on with corrupt data.",
+          "Never swallow an error silently — an empty catch block hides the very clue you'll need to debug.",
         ],
       },
       {
         type: "note",
-        text: "An error message is written for the person debugging at 3am. Include what was being attempted and the relevant values, not just 'something went wrong.'",
+        text: "An error message is written for the person debugging at 3am. Include what was being attempted and the relevant values, not just 'something went wrong'. A good message and a clean stack trace are the difference between a five-minute fix and a five-hour one.",
       },
     ],
+    tradeoffLabels: { good: "What it enables", costs: "Common mistakes" },
     tradeoffs: {
       good: [
-        "Turns unpredictable crashes into deliberate, recoverable outcomes.",
-        "Separates the happy path from failure handling, keeping the main logic readable.",
-        "Good errors carry the context that makes a bug diagnosable.",
+        "Failing loudly and safely instead of silently corrupting data.",
+        "Separating the happy path (try) from failure handling (catch) so the main logic stays readable.",
+        "Cleaning up reliably with finally, whatever happens.",
+        "Letting an error travel to the layer that can actually handle it.",
       ],
       costs: [
-        "Exceptions can hide non-obvious exit points from a block of code.",
-        "Overusing exceptions for ordinary control flow is slow and confusing.",
-        "Catch-all handlers that swallow everything mask real bugs.",
+        "Swallowing errors — an empty catch — so failures disappear silently.",
+        "Catching too broadly and hiding bugs you never meant to handle.",
+        "Using exceptions for ordinary control flow, which is slow and confusing.",
+        "Leaking resources by not cleaning up (no finally / no defer).",
+        "Vague messages that don't say what failed or why.",
+        "Carrying on with corrupt or partial data instead of failing fast.",
       ],
     },
     realWorld:
-      "Most of the difference between a demo and a production system is error handling: timeouts, missing files, bad input, half-finished writes. When a stack trace lands in your logs, it's the error-handling story that decides whether you get a useful clue or just a crash.",
+      "Most of the difference between a demo and a production system is error handling: timeouts, missing files, bad input, half-finished writes. The empty catch block that hid a bug for weeks, and the clean stack trace that pointed straight at the cause, are both this topic — which is why it connects to logging and observability.",
     related: [
       { slug: "control-flow", note: "Errors branch the program onto a failure path." },
-      { slug: "logs-stack-traces", note: "Where errors leave a trail you can debug from." },
-      { slug: "failure-retries-timeouts", note: "Handling failures in calls across a network." },
+      { slug: "functions", note: "Uncaught errors propagate up through the callers." },
+      { slug: "logs-stack-traces", note: "Where an uncaught error leaves a trail to debug from." },
       { slug: "input-validation", note: "Rejecting bad input before it becomes an error." },
+      { slug: "failure-retries-timeouts", note: "Handling failures in calls across a network." },
+      { slug: "observability", note: "Errors should be logged and monitored, not just caught." },
     ],
   },
   {
