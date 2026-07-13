@@ -46,7 +46,8 @@ export type DemoId =
   | "time-space"
   | "sql-select"
   | "sql-join"
-  | "sql-group";
+  | "sql-group"
+  | "txn-race";
 
 export type ContentBlock =
   | { type: "para"; text: string }
@@ -151,10 +152,16 @@ const transactionsAcid: TopicContent = {
     "How a database groups several changes so they all happen — or none do.",
   problem:
     "A bank transfer is two steps: subtract $100 from Alice, add $100 to Bob. If the server crashes between them, Alice has lost $100 that never reached Bob. Any operation made of multiple steps has this danger — a half-finished change leaves the data in a state that should never exist. How does a database make many steps behave as one?",
+  demo: "txn-race",
   how: [
     {
       type: "para",
       text: "A transaction wraps a group of statements between BEGIN and COMMIT. Until you COMMIT, nothing is permanent; if anything goes wrong you ROLLBACK and it's as if none of it happened. The database guarantees the whole group is all-or-nothing.",
+    },
+    {
+      type: "code",
+      code: "BEGIN;\n  UPDATE accounts SET balance = balance - 100 WHERE id = 'alice';\n  UPDATE accounts SET balance = balance + 100 WHERE id = 'bob';\nCOMMIT;   -- both land together; a crash before COMMIT rolls both back\n\n-- if the second UPDATE fails, ROLLBACK undoes the first — no lost $100",
+      caption: "Wrapping both updates in one transaction makes them all-or-nothing.",
     },
     {
       type: "para",
@@ -214,10 +221,16 @@ const locks: TopicContent = {
     "How a database stops two transactions from corrupting the same row at once.",
   problem:
     "Two people buy the last concert ticket in the same instant. Both transactions read 'seats left: 1', both decide it's available, both write 'seats left: 0' and issue a ticket. Two tickets, one seat. Whenever concurrent transactions touch the same data, their steps can interleave and produce results neither would alone. How does the database serialize access to shared rows?",
+  demo: "txn-race",
   how: [
     {
       type: "para",
       text: "A lock is a claim a transaction places on a piece of data. While it holds the lock, other transactions that need it must wait. The two common kinds are shared (read) locks — many readers can hold one at once — and exclusive (write) locks — only one holder, blocking everyone else.",
+    },
+    {
+      type: "code",
+      code: "BEGIN;\n  -- take an exclusive lock on the row before deciding\n  SELECT seats_left FROM shows WHERE id = 42 FOR UPDATE;\n  -- a second buyer blocks on that SELECT until this transaction commits\n  UPDATE shows SET seats_left = seats_left - 1 WHERE id = 42;\nCOMMIT;",
+      caption: "FOR UPDATE locks the row so the second buyer waits, then re-reads the true value.",
     },
     {
       type: "para",
@@ -276,6 +289,7 @@ const isolationLevels: TopicContent = {
     "How much of each other's unfinished work concurrent transactions are allowed to see.",
   problem:
     "Perfect isolation — every transaction behaving as if it ran completely alone — is slow, because it forces transactions to wait for one another. But loosening it lets strange things happen: you read a value, someone else changes it, you read again mid-transaction and get a different number. Databases give you a dial between 'always correct but slow' and 'faster but with surprises.' Which surprises can you live with?",
+  demo: "txn-race",
   how: [
     {
       type: "para",
@@ -289,6 +303,11 @@ const isolationLevels: TopicContent = {
         "Repeatable Read — rows you've read won't change under you, but new matching rows can still appear (phantoms).",
         "Serializable — the strongest: transactions behave as if run one at a time. No anomalies, most contention.",
       ],
+    },
+    {
+      type: "code",
+      code: "BEGIN;\nSET TRANSACTION ISOLATION LEVEL SERIALIZABLE;\n  SELECT balance FROM accounts WHERE id = 'alice';   -- read\n  UPDATE accounts SET balance = balance - 100 WHERE id = 'alice';   -- then act\nCOMMIT;\n\n-- at SERIALIZABLE a conflicting txn is aborted (retry it) instead of\n-- silently overwriting your read — the lost update becomes visible",
+      caption: "Raising the level turns a silent lost update into a loud, retryable abort.",
     },
     {
       type: "para",
@@ -343,6 +362,11 @@ const normalization: TopicContent = {
     {
       type: "para",
       text: "Normalization splits data into tables so each piece of information is stored once, with foreign keys linking them. Instead of copying the address onto every order, you keep it on the customer row and have orders point to the customer.",
+    },
+    {
+      type: "code",
+      code: "-- denormalized: address copied onto every order → drifts out of sync\norders(id, customer_name, customer_address, item)\n\n-- normalized: the fact lives once; orders reference it\ncustomers(id, name, address)\norders(id, customer_id → customers.id, item)",
+      caption: "The address lives once on the customer; orders reference it instead of copying it.",
     },
     {
       type: "para",
@@ -405,6 +429,11 @@ const queryPlanning: TopicContent = {
     {
       type: "para",
       text: "It picks the plan with the lowest estimated cost and runs it. EXPLAIN shows you the plan it chose — whether it's using an index, scanning the whole table, and how it's joining.",
+    },
+    {
+      type: "code",
+      code: "EXPLAIN SELECT * FROM users WHERE email = 'x';\n\n-- Index Scan using users_email_idx  (cost=0.29..8.30 rows=1)   ← seeks straight to the row\n-- Seq Scan on users               (cost=0.00..1804.00 rows=1) ← reads every row instead\n\n-- same query, same result — the plan is the difference between fast and slow",
+      caption: "EXPLAIN reveals the plan: an Index Scan jumps to the row; a Seq Scan reads them all.",
     },
     {
       type: "points",

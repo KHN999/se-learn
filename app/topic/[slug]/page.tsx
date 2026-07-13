@@ -49,6 +49,7 @@ import BigODemo from "@/components/demos/BigODemo";
 import ClassBarsDemo from "@/components/demos/ClassBarsDemo";
 import TimeSpaceDemo from "@/components/demos/TimeSpaceDemo";
 import SqlDemo from "@/components/demos/SqlDemo";
+import TxnRaceDemo from "@/components/demos/TxnRaceDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -193,6 +194,7 @@ const DEMOS = {
   "sql-select": (c: string) => <SqlDemo color={c} focus="filter" />,
   "sql-join": (c: string) => <SqlDemo color={c} focus="join" />,
   "sql-group": (c: string) => <SqlDemo color={c} focus="group" />,
+  "txn-race": (c: string) => <TxnRaceDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {
