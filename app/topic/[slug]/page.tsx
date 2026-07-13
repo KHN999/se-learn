@@ -40,6 +40,11 @@ import HashMapDemo from "@/components/demos/HashMapDemo";
 import HeapDemo from "@/components/demos/HeapDemo";
 import GraphDemo from "@/components/demos/GraphDemo";
 import TreeDemo from "@/components/demos/TreeDemo";
+import SearchDemo from "@/components/demos/SearchDemo";
+import SortDemo from "@/components/demos/SortDemo";
+import RecursionDemo from "@/components/demos/RecursionDemo";
+import GreedyDemo from "@/components/demos/GreedyDemo";
+import DpFibDemo from "@/components/demos/DpFibDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -173,6 +178,11 @@ const DEMOS = {
   "heap-tree": (c: string) => <HeapDemo color={c} />,
   "graph-traversal": (c: string) => <GraphDemo color={c} />,
   bst: (c: string) => <TreeDemo color={c} />,
+  "search-compare": (c: string) => <SearchDemo color={c} />,
+  "sort-bars": (c: string) => <SortDemo color={c} />,
+  "recursion-factorial": (c: string) => <RecursionDemo color={c} />,
+  "greedy-coins": (c: string) => <GreedyDemo color={c} />,
+  "dp-fib": (c: string) => <DpFibDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {

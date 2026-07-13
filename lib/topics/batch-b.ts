@@ -16,6 +16,15 @@ export const batchB: TopicContent[] = [
         text: "If the data is sorted, you can do far better with binary search. Look at the middle element; if it's too big, throw away the whole upper half; if too small, throw away the lower half. Each comparison halves what's left, so a million items take about 20 comparisons instead of a million — O(log n).",
       },
       {
+        type: "code",
+        code: "// linear: check each item — works on anything, O(n)\nfor (const x of list) if (x === target) return true\n\n// binary: sorted list only, O(log n)\nlet lo = 0, hi = list.length - 1\nwhile (lo <= hi) {\n  const mid = (lo + hi) >> 1\n  if (list[mid] === target) return true\n  list[mid] < target ? (lo = mid + 1) : (hi = mid - 1)\n}",
+        caption: "Linear scans everything; binary halves — but only on sorted data.",
+      },
+      {
+        type: "demo",
+        demo: "search-compare",
+      },
+      {
         type: "points",
         items: [
           "Linear search: O(n), works on any collection, needs no setup.",
@@ -40,6 +49,7 @@ export const batchB: TopicContent[] = [
         "Choosing wrong (linear scan on hot path) is a classic silent bottleneck.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "Every database index, every 'find user by email', every autocomplete is a search problem underneath. When code 'gets slow as data grows', it's often a linear scan where a sorted structure or hash lookup belonged.",
     related: [
@@ -63,6 +73,15 @@ export const batchB: TopicContent[] = [
       {
         type: "para",
         text: "The efficient general-purpose sorts — merge sort, quicksort, heapsort — use divide and conquer or a heap to get O(n log n). Merge sort splits the list in half, sorts each half, then merges them; that halving is where the log n comes from. This is why almost every language's built-in sort runs in O(n log n).",
+      },
+      {
+        type: "code",
+        code: "// simple: compare neighbours and swap — O(n²)\nfor (let i = 0; i < n; i++)\n  for (let j = 0; j < n - 1 - i; j++)\n    if (a[j] > a[j + 1]) swap(a, j, j + 1)\n\n// efficient: split, sort halves, merge — O(n log n)\n// (what your language's built-in sort does)",
+        caption: "Simple sorts do about n² comparisons; efficient ones do n log n.",
+      },
+      {
+        type: "demo",
+        demo: "sort-bars",
       },
       {
         type: "points",
@@ -90,6 +109,7 @@ export const batchB: TopicContent[] = [
         "Stability and custom comparators are easy to get subtly wrong.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "You rarely implement a sort, but you constantly call one — ordering query results, ranking search hits, preparing data for a binary search. Knowing it's O(n log n) tells you when sorting repeatedly in a hot path is the real cost.",
     related: [
@@ -113,6 +133,15 @@ export const batchB: TopicContent[] = [
       {
         type: "para",
         text: "Each call gets its own stack frame with its own local variables. The calls pile up on the call stack until the base case is hit, then unwind, each returning its result to the one that called it. This is why recursion and the call stack are inseparable.",
+      },
+      {
+        type: "code",
+        code: "function factorial(n) {\n  if (n === 0) return 1         // base case — stops the recursion\n  return n * factorial(n - 1)  // recursive case — smaller each time\n}\n\nfactorial(4)  // 4 × 3 × 2 × 1 = 24",
+        caption: "A base case to stop, a recursive case that shrinks toward it.",
+      },
+      {
+        type: "demo",
+        demo: "recursion-factorial",
       },
       {
         type: "points",
@@ -139,6 +168,7 @@ export const batchB: TopicContent[] = [
         "Naive recursion can recompute the same subproblem many times (see dynamic programming).",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "You meet recursion in tree and graph traversal, parsing JSON or source code, walking a filesystem, and divide-and-conquer sorts. A 'maximum recursion depth exceeded' error is the stack telling you a base case was never reached or the input was deeper than the stack allows.",
     related: [
@@ -162,6 +192,15 @@ export const batchB: TopicContent[] = [
       {
         type: "para",
         text: "There are two styles. Top-down (memoization) keeps the recursive shape but caches each result the first time it's computed. Bottom-up (tabulation) fills a table from the smallest subproblems up to the answer, no recursion needed. Both turn exponential work into polynomial.",
+      },
+      {
+        type: "code",
+        code: "// naive: recomputes the same fib(k) exponentially — O(2ⁿ)\nfunction fib(n) {\n  if (n < 2) return n\n  return fib(n - 1) + fib(n - 2)\n}\n\n// memoized: compute each once, then reuse — O(n)\nconst memo = {}\nfunction fib(n) {\n  if (n < 2) return n\n  if (n in memo) return memo[n]\n  return (memo[n] = fib(n - 1) + fib(n - 2))\n}",
+        caption: "Adding a cache turns exponential recomputation into linear work.",
+      },
+      {
+        type: "demo",
+        demo: "dp-fib",
       },
       {
         type: "points",
@@ -188,6 +227,7 @@ export const batchB: TopicContent[] = [
         "Defining the correct recurrence and state is genuinely hard to get right.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "DP powers edit distance (spell check, diff tools), shortest paths, text justification, and countless interview problems. In practice you meet it whenever a naive recursive solution is 'correct but impossibly slow' — the cure is almost always remembering what you already computed.",
     related: [
@@ -211,6 +251,15 @@ export const batchB: TopicContent[] = [
       {
         type: "para",
         text: "The danger is that a locally optimal choice can lock you out of the globally optimal solution. Greedy only guarantees the best answer when the problem has the 'greedy choice property' — a proof that local optimums compose into a global one. For coin change with standard denominations it works; with odd denominations it can fail.",
+      },
+      {
+        type: "code",
+        code: "// take the largest coin that fits, repeat\nfunction greedyChange(amount, coins) {\n  const picks = []\n  for (const c of coins.sort((a, b) => b - a))\n    while (amount >= c) { picks.push(c); amount -= c }\n  return picks\n}\n\ngreedyChange(6, [4, 3, 1])  // 4,1,1 (3 coins) — but 3,3 is better!",
+        caption: "Fast and simple — but the local choice isn't always globally optimal.",
+      },
+      {
+        type: "demo",
+        demo: "greedy-coins",
       },
       {
         type: "points",
@@ -237,6 +286,7 @@ export const batchB: TopicContent[] = [
         "As a heuristic it may land near, but not at, the true optimum.",
       ],
     },
+    tradeoffLabels: { good: "Strengths", costs: "Weaknesses" },
     realWorld:
       "Greedy shows up in Dijkstra's shortest path, Huffman compression, task scheduling, and interval selection. In everyday work it's often the first thing to try — and the thing to be suspicious of, because 'it worked on my examples' is not a proof it's optimal.",
     related: [

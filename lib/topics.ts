@@ -35,7 +35,12 @@ export type DemoId =
   | "hashmap-buckets"
   | "heap-tree"
   | "graph-traversal"
-  | "bst";
+  | "bst"
+  | "search-compare"
+  | "sort-bars"
+  | "recursion-factorial"
+  | "greedy-coins"
+  | "dp-fib";
 
 export type ContentBlock =
   | { type: "para"; text: string }
