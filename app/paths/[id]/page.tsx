@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { getAllPathIds, getPath, resolvePath } from "@/lib/paths";
 import { tint } from "@/lib/curriculum";
 import { PathIcon } from "@/components/PathIcon";

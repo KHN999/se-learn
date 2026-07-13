@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowRight, Check, RotateCcw } from "lucide-react";
-import { readProgress, toggleProgress, writeProgress } from "@/lib/progress";
+import {
+  readProgress,
+  toggleProgress,
+  useProgress,
+  writeProgress,
+} from "@/lib/progress";
 
 type Step = {
   type: "topic" | "flow";
@@ -22,33 +27,29 @@ export default function PathRunner({
   color: string;
 }) {
   const allSteps = useMemo(() => phases.flatMap((p) => p.steps), [phases]);
-  const [done, setDone] = useState<Record<string, boolean>>({});
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setDone(readProgress());
-    setMounted(true);
-  }, []);
+  const done = useProgress();
 
   function toggle(slug: string) {
-    setDone({ ...toggleProgress(slug) });
+    toggleProgress(slug);
   }
 
   function resetPath() {
     const p = readProgress();
     for (const s of allSteps) delete p[s.slug];
     writeProgress(p);
-    setDone({ ...p });
   }
 
   const total = allSteps.length;
-  const completed = mounted ? allSteps.filter((s) => done[s.slug]).length : 0;
+  const completed = allSteps.filter((s) => done[s.slug]).length;
   const pct = total ? Math.round((completed / total) * 100) : 0;
   const nextStep = allSteps.find((s) => !done[s.slug]) ?? allSteps[0];
   const ctaLabel =
     completed === 0 ? "Start" : completed >= total ? "Review" : "Continue";
 
-  let n = 0;
+  // Step number offset per phase (avoids a mutable render counter).
+  const phaseOffsets = phases.map((_, i) =>
+    phases.slice(0, i).reduce((sum, ph) => sum + ph.steps.length, 0),
+  );
 
   return (
     <div style={{ ["--area"]: color } as React.CSSProperties}>
@@ -91,15 +92,15 @@ export default function PathRunner({
 
       {/* Phases */}
       <div className="space-y-8">
-        {phases.map((phase) => (
+        {phases.map((phase, pIdx) => (
           <section key={phase.title}>
             <h2 className="font-mono text-xs uppercase tracking-widest" style={{ color }}>
               {phase.title}
             </h2>
             <ol className="mt-3 space-y-2">
-              {phase.steps.map((s) => {
-                n += 1;
-                const isDone = mounted && done[s.slug];
+              {phase.steps.map((s, i) => {
+                const num = phaseOffsets[pIdx] + i + 1;
+                const isDone = !!done[s.slug];
                 return (
                   <li key={s.slug} className="flex items-center gap-3">
                     <button
@@ -120,7 +121,7 @@ export default function PathRunner({
                       className="group flex flex-1 items-center gap-3 rounded-lg border border-line bg-panel px-4 py-3 transition-colors hover:border-[var(--area)]"
                     >
                       <span className="font-mono text-[11px] text-faint">
-                        {String(n).padStart(2, "0")}
+                        {String(num).padStart(2, "0")}
                       </span>
                       <span
                         className="h-2 w-2 shrink-0 rounded-full"

@@ -87,6 +87,7 @@ export default function ArrayDemo({ color }: { color: string }) {
         <input
           value={idx}
           onChange={(e) => setIdx(e.target.value)}
+          aria-label="index to get"
           className="w-14 rounded-lg border border-line bg-bg-2 px-2 py-1.5 text-center font-mono text-sm text-text focus:outline-none"
         />
         <button
@@ -101,6 +102,7 @@ export default function ArrayDemo({ color }: { color: string }) {
         <input
           value={val}
           onChange={(e) => setVal(e.target.value)}
+          aria-label="value to insert"
           className="w-14 rounded-lg border border-line bg-bg-2 px-2 py-1.5 text-center font-mono text-sm text-text focus:outline-none"
         />
         <button

@@ -113,6 +113,7 @@ export default function HeapDemo({ color }: { color: string }) {
         <input
           value={val}
           onChange={(e) => setVal(e.target.value)}
+          aria-label="value to insert"
           className="w-14 rounded-lg border border-line bg-bg-2 px-2 py-1.5 text-center font-mono text-sm text-text focus:outline-none"
         />
         <button
@@ -143,6 +144,8 @@ export default function HeapDemo({ color }: { color: string }) {
           viewBox={`0 0 100 ${height}`}
           className="h-auto w-full"
           style={{ maxHeight: 260 }}
+          role="img"
+          aria-label="A min-heap drawn as a binary tree; every parent is smaller than its children, so the smallest value sits at the root."
         >
           {arr.map((_, i) => {
             if (i === 0) return null;

@@ -102,6 +102,7 @@ export default function HashMapDemo({ color }: { color: string }) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          aria-label="key"
           className="w-28 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 font-mono text-sm text-text focus:outline-none"
         />
         <button

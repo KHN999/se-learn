@@ -35,7 +35,7 @@ type Step = { current: string; visited: string[]; frontier: string[]; note: stri
 
 function traverse(mode: "bfs" | "dfs"): Step[] {
   const visited = new Set([START]);
-  let frontier = [START];
+  const frontier = [START];
   const steps: Step[] = [];
   const struct = mode === "bfs" ? "queue" : "stack";
   while (frontier.length) {
@@ -66,21 +66,21 @@ export default function GraphDemo({ color }: { color: string }) {
   const steps = useMemo(() => traverse(mode), [mode]);
   const cur = steps[Math.min(step, steps.length - 1)];
   const atEnd = step >= steps.length - 1;
+  const isPlaying = playing && !atEnd;
 
-  useEffect(() => {
+  // Reset the walk when the mode changes (adjust state during render).
+  const [prevMode, setPrevMode] = useState(mode);
+  if (mode !== prevMode) {
+    setPrevMode(mode);
     setStep(0);
     setPlaying(false);
-  }, [mode]);
+  }
 
   useEffect(() => {
-    if (!playing) return;
-    if (atEnd) {
-      setPlaying(false);
-      return;
-    }
+    if (!isPlaying) return;
     const t = setTimeout(() => setStep((s) => Math.min(s + 1, steps.length - 1)), 900);
     return () => clearTimeout(t);
-  }, [playing, step, atEnd, steps.length]);
+  }, [isPlaying, step, steps.length]);
 
   const order = steps.slice(0, step + 1).map((s) => s.current);
 
@@ -102,6 +102,7 @@ export default function GraphDemo({ color }: { color: string }) {
               <button
                 key={m}
                 onClick={() => setMode(m)}
+                aria-pressed={on}
                 className="px-3 py-1.5 font-mono text-xs uppercase transition-colors"
                 style={on ? { background: tint(color, 16), color } : { color: "var(--color-faint)" }}
               >
@@ -116,8 +117,8 @@ export default function GraphDemo({ color }: { color: string }) {
           className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-bg transition-transform hover:-translate-y-0.5 disabled:opacity-50"
           style={{ background: color }}
         >
-          {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-          {playing ? "Pause" : "Play"}
+          {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+          {isPlaying ? "Pause" : "Play"}
         </button>
         <button
           onClick={() => setStep((s) => Math.min(s + 1, steps.length - 1))}
@@ -139,7 +140,13 @@ export default function GraphDemo({ color }: { color: string }) {
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <div className="rounded-xl border border-line-soft bg-bg-2/50 p-2">
-          <svg viewBox="0 0 100 74" className="h-auto w-full" style={{ maxHeight: 280 }}>
+          <svg
+            viewBox="0 0 100 74"
+            className="h-auto w-full"
+            style={{ maxHeight: 280 }}
+            role="img"
+            aria-label="A graph of six connected nodes (A–F) being traversed from node A; visited nodes and the current node are highlighted."
+          >
             {EDGES.map(([a, b]) => (
               <line
                 key={`${a}${b}`}

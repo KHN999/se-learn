@@ -31,7 +31,7 @@ export default function TreeDemo({ color }: { color: string }) {
   const [target, setTarget] = useState("10");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState(
-    "In a binary search tree, smaller values go left and larger go right — so each step skips half the tree.",
+    "In a binary search tree, smaller values go left and larger go right — so in a balanced tree, each step skips about half.",
   );
   const tok = useRef(0);
 
@@ -118,7 +118,7 @@ export default function TreeDemo({ color }: { color: string }) {
     if (tok.current !== token) return;
     setActive(null);
     setBusy(false);
-    setNote("In-order traversal visits left → node → right, so the values come out sorted — for free.");
+    setNote("In-order traversal visits left → node → right, so the values come out sorted — in O(n), with no separate sort.");
   }
 
   function reset() {
@@ -146,6 +146,7 @@ export default function TreeDemo({ color }: { color: string }) {
         <input
           value={target}
           onChange={(e) => setTarget(e.target.value)}
+          aria-label="value to find"
           className="w-14 rounded-lg border border-line bg-bg-2 px-2 py-1.5 text-center font-mono text-sm text-text focus:outline-none"
         />
         <button
@@ -172,7 +173,13 @@ export default function TreeDemo({ color }: { color: string }) {
       </div>
 
       <div className="mt-4 rounded-xl border border-line-soft bg-bg-2/50 p-2">
-        <svg viewBox={`0 0 100 ${height}`} className="h-auto w-full" style={{ maxHeight: 240 }}>
+        <svg
+          viewBox={`0 0 100 ${height}`}
+          className="h-auto w-full"
+          style={{ maxHeight: 240 }}
+          role="img"
+          aria-label="A binary search tree; a search descends left or right at each node, eliminating about half the remaining values each step."
+        >
           {edges.map(([a, b]) => {
             const pa = positions.get(a)!;
             const pb = positions.get(b)!;

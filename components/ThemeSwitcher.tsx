@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Check, Palette } from "lucide-react";
 
 type ThemeDef = {
@@ -18,21 +18,32 @@ const THEMES: ThemeDef[] = [
 ];
 
 const STORAGE_KEY = "se-theme";
+const THEME_EVENT = "se-theme-change";
+
+function themeSnapshot(): string {
+  if (typeof document === "undefined") return "midnight";
+  let saved: string | null = null;
+  try {
+    saved = localStorage.getItem(STORAGE_KEY);
+  } catch {
+    saved = null;
+  }
+  return saved || document.documentElement.getAttribute("data-theme") || "midnight";
+}
+
+function themeSubscribe(cb: () => void): () => void {
+  window.addEventListener(THEME_EVENT, cb);
+  window.addEventListener("storage", cb);
+  return () => {
+    window.removeEventListener(THEME_EVENT, cb);
+    window.removeEventListener("storage", cb);
+  };
+}
 
 export default function ThemeSwitcher() {
   const [open, setOpen] = useState(false);
-  const [theme, setTheme] = useState("midnight");
+  const theme = useSyncExternalStore(themeSubscribe, themeSnapshot, () => "midnight");
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let saved: string | null = null;
-    try {
-      saved = localStorage.getItem(STORAGE_KEY);
-    } catch {
-      saved = null;
-    }
-    setTheme(saved || document.documentElement.getAttribute("data-theme") || "midnight");
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -51,13 +62,13 @@ export default function ThemeSwitcher() {
   }, [open]);
 
   function apply(id: string) {
-    setTheme(id);
     document.documentElement.setAttribute("data-theme", id);
     try {
       localStorage.setItem(STORAGE_KEY, id);
     } catch {
       // ignore
     }
+    window.dispatchEvent(new Event(THEME_EVENT));
     setOpen(false);
   }
 

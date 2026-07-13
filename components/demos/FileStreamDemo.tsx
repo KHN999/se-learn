@@ -17,12 +17,20 @@ export default function FileStreamDemo({ color }: { color: string }) {
   const [status, setStatus] = useState<"idle" | "running" | "done" | "oom">("idle");
   const tok = useRef(0);
 
-  useEffect(() => {
-    tok.current++;
+  // Reset the visualization when the file size or mode changes.
+  const key = `${mode}|${chunks}`;
+  const [prevKey, setPrevKey] = useState(key);
+  if (key !== prevKey) {
+    setPrevKey(key);
     setInMem([]);
     setProcessed(0);
     setPeak(0);
     setStatus("idle");
+  }
+
+  useEffect(() => {
+    // Cancel any in-flight run when the inputs change (ref write only).
+    tok.current++;
   }, [mode, chunks]);
 
   async function run() {
@@ -112,6 +120,7 @@ export default function FileStreamDemo({ color }: { color: string }) {
               <button
                 key={m}
                 onClick={() => setMode(m)}
+                aria-pressed={on}
                 className="px-3 py-1.5 text-xs transition-colors"
                 style={on ? { background: tint(color, 16), color } : { color: "var(--color-faint)" }}
               >

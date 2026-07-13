@@ -152,6 +152,7 @@ function Toggle({
     <button
       onClick={onClick}
       disabled={disabled}
+      aria-pressed={on}
       className="rounded-lg border px-3 py-1.5 text-xs transition-colors disabled:opacity-40"
       style={
         on
@@ -179,24 +180,25 @@ export default function ControlFlowDemo({ color }: { color: string }) {
   const nodes = broken ? BROKEN_NODES : NORMAL_NODES;
   const frame = frames[Math.min(step, frames.length - 1)];
   const atEnd = step >= frames.length - 1;
+  const isPlaying = playing && !atEnd;
 
-  useEffect(() => {
+  // Reset the run when the program changes (adjust state during render).
+  const progKey = `${cart.join(",")}|${coupon}|${broken}`;
+  const [prevKey, setPrevKey] = useState(progKey);
+  if (progKey !== prevKey) {
+    setPrevKey(progKey);
     setStep(0);
     setPlaying(false);
-  }, [cart, coupon, broken]);
+  }
 
   useEffect(() => {
-    if (!playing) return;
-    if (atEnd) {
-      setPlaying(false);
-      return;
-    }
+    if (!isPlaying) return;
     const t = setTimeout(
       () => setStep((s) => Math.min(s + 1, frames.length - 1)),
       750,
     );
     return () => clearTimeout(t);
-  }, [playing, step, atEnd, frames.length]);
+  }, [isPlaying, step, frames.length]);
 
   return (
     <div className="rounded-2xl border border-line bg-panel p-5 sm:p-6">
@@ -338,8 +340,8 @@ export default function ControlFlowDemo({ color }: { color: string }) {
           className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-bg transition-transform hover:-translate-y-0.5 disabled:opacity-50"
           style={{ background: color }}
         >
-          {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-          {playing ? "Pause" : "Play"}
+          {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+          {isPlaying ? "Pause" : "Play"}
         </button>
         <button
           onClick={() => setStep((s) => Math.min(s + 1, frames.length - 1))}

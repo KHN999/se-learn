@@ -61,21 +61,21 @@ export default function ErrorPropagationDemo({ color }: { color: string }) {
   const phases = build(catchAt);
   const phase = phases[Math.min(step, phases.length - 1)];
   const atEnd = step >= phases.length - 1;
+  const isPlaying = playing && !atEnd;
 
-  useEffect(() => {
+  // Reset when the catch location changes (adjust state during render).
+  const [prevCatch, setPrevCatch] = useState(catchAt);
+  if (catchAt !== prevCatch) {
+    setPrevCatch(catchAt);
     setStep(0);
     setPlaying(false);
-  }, [catchAt]);
+  }
 
   useEffect(() => {
-    if (!playing) return;
-    if (atEnd) {
-      setPlaying(false);
-      return;
-    }
+    if (!isPlaying) return;
     const t = setTimeout(() => setStep((s) => Math.min(s + 1, phases.length - 1)), 950);
     return () => clearTimeout(t);
-  }, [playing, step, atEnd, phases.length]);
+  }, [isPlaying, step, phases.length]);
 
   const view = [...phase.stack].reverse();
 
@@ -109,6 +109,7 @@ export default function ErrorPropagationDemo({ color }: { color: string }) {
             <button
               key={o.key}
               onClick={() => setCatchAt(o.key)}
+              aria-pressed={on}
               className="rounded-lg border px-3 py-1.5 text-xs transition-colors"
               style={
                 on
@@ -210,8 +211,8 @@ export default function ErrorPropagationDemo({ color }: { color: string }) {
           className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-bg transition-transform hover:-translate-y-0.5 disabled:opacity-50"
           style={{ background: color }}
         >
-          {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-          {playing ? "Pause" : "Play"}
+          {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+          {isPlaying ? "Pause" : "Play"}
         </button>
         <button
           onClick={() => setStep((s) => Math.min(s + 1, phases.length - 1))}

@@ -58,7 +58,6 @@ export default function IndexScanDemo({ color }: { color: string }) {
   // Extrapolate the on-screen 48-cell demo to the real table size.
   const scanExamined = Math.round(((target + 1) / GRID) * size);
   const indexExamined = Math.max(1, Math.ceil(Math.log2(size)));
-  const examined = indexed ? indexExamined : scanExamined;
 
   function clear() {
     tok.current++;

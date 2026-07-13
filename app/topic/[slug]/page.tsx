@@ -21,6 +21,7 @@ import {
   getTopicContent,
   getTopicGraph,
   type ContentBlock,
+  type DemoId,
 } from "@/lib/topics";
 import { AreaIcon } from "@/components/AreaIcon";
 import IndexScanDemo from "@/components/demos/IndexScanDemo";
@@ -151,25 +152,31 @@ function Block({ block, color }: { block: ContentBlock; color: string }) {
   );
 }
 
-function renderDemo(id: string, color: string) {
-  if (id === "index-scan") return <IndexScanDemo color={color} />;
-  if (id === "coercion") return <CoercionDemo color={color} />;
-  if (id === "references") return <ReferenceDemo color={color} />;
-  if (id === "control-flow-tracer") return <ControlFlowDemo color={color} />;
-  if (id === "call-stack") return <CallStackDemo color={color} />;
-  if (id === "class-instances") return <ClassInstanceDemo color={color} />;
-  if (id === "error-propagation") return <ErrorPropagationDemo color={color} />;
-  if (id === "collections-compare") return <CollectionsDemo color={color} />;
-  if (id === "file-stream") return <FileStreamDemo color={color} />;
-  if (id === "array-ops") return <ArrayDemo color={color} />;
-  if (id === "linked-list-ops") return <LinkedListDemo color={color} />;
-  if (id === "stack") return <StackQueueDemo color={color} mode="stack" />;
-  if (id === "queue") return <StackQueueDemo color={color} mode="queue" />;
-  if (id === "hashmap-buckets") return <HashMapDemo color={color} />;
-  if (id === "heap-tree") return <HeapDemo color={color} />;
-  if (id === "graph-traversal") return <GraphDemo color={color} />;
-  if (id === "bst") return <TreeDemo color={color} />;
-  return null;
+// Typed registry: every DemoId must have an entry (checked by `satisfies`), and
+// content can only reference a valid DemoId — so a missing/misspelled demo is a
+// compile error rather than a silently blank slot.
+const DEMOS = {
+  "index-scan": (c: string) => <IndexScanDemo color={c} />,
+  coercion: (c: string) => <CoercionDemo color={c} />,
+  references: (c: string) => <ReferenceDemo color={c} />,
+  "control-flow-tracer": (c: string) => <ControlFlowDemo color={c} />,
+  "call-stack": (c: string) => <CallStackDemo color={c} />,
+  "class-instances": (c: string) => <ClassInstanceDemo color={c} />,
+  "error-propagation": (c: string) => <ErrorPropagationDemo color={c} />,
+  "collections-compare": (c: string) => <CollectionsDemo color={c} />,
+  "file-stream": (c: string) => <FileStreamDemo color={c} />,
+  "array-ops": (c: string) => <ArrayDemo color={c} />,
+  "linked-list-ops": (c: string) => <LinkedListDemo color={c} />,
+  stack: (c: string) => <StackQueueDemo color={c} mode="stack" />,
+  queue: (c: string) => <StackQueueDemo color={c} mode="queue" />,
+  "hashmap-buckets": (c: string) => <HashMapDemo color={c} />,
+  "heap-tree": (c: string) => <HeapDemo color={c} />,
+  "graph-traversal": (c: string) => <GraphDemo color={c} />,
+  bst: (c: string) => <TreeDemo color={c} />,
+} satisfies Record<DemoId, (color: string) => React.ReactNode>;
+
+function renderDemo(id: DemoId, color: string) {
+  return DEMOS[id](color);
 }
 
 export default async function TopicPage({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
@@ -105,7 +105,6 @@ const KIND_META: Record<Kind, { label: string; icon: typeof Hash }> = {
 
 export default function CommandPalette() {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [highlight, setHighlight] = useState(0);
@@ -113,33 +112,35 @@ export default function CommandPalette() {
   const listRef = useRef<HTMLUListElement>(null);
 
   const results = useMemo(() => search(query), [query]);
+  // Clamp at read time instead of resetting state in an effect.
+  const active = results.length ? Math.min(highlight, results.length - 1) : -1;
 
-  useEffect(() => setMounted(true), []);
+  const openPalette = useCallback(() => {
+    setQuery("");
+    setHighlight(0);
+    setOpen(true);
+  }, []);
 
   // Open via ⌘K / Ctrl+K anywhere, or a dispatched event (e.g. the hero button).
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setOpen((o) => !o);
+        if (open) setOpen(false);
+        else openPalette();
       }
     }
-    function onOpen() {
-      setOpen(true);
-    }
     window.addEventListener("keydown", onKey);
-    window.addEventListener("se-open-search", onOpen);
+    window.addEventListener("se-open-search", openPalette);
     return () => {
       window.removeEventListener("keydown", onKey);
-      window.removeEventListener("se-open-search", onOpen);
+      window.removeEventListener("se-open-search", openPalette);
     };
-  }, []);
+  }, [open, openPalette]);
 
-  // On open: focus, reset, lock body scroll.
+  // Focus the input and lock body scroll while open (no state writes here).
   useEffect(() => {
     if (!open) return;
-    setQuery("");
-    setHighlight(0);
     const t = setTimeout(() => inputRef.current?.focus(), 0);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -149,17 +150,13 @@ export default function CommandPalette() {
     };
   }, [open]);
 
-  // Keep the highlighted row valid and scrolled into view.
-  useEffect(() => {
-    if (highlight >= results.length) setHighlight(0);
-  }, [results, highlight]);
-
+  // Keep the highlighted row scrolled into view.
   useEffect(() => {
     const el = listRef.current?.querySelector<HTMLElement>(
-      `[data-idx="${highlight}"]`,
+      `[data-idx="${active}"]`,
     );
     el?.scrollIntoView({ block: "nearest" });
-  }, [highlight]);
+  }, [active]);
 
   function go(item: Item) {
     setOpen(false);
@@ -177,7 +174,7 @@ export default function CommandPalette() {
       );
     } else if (e.key === "Enter") {
       e.preventDefault();
-      const item = results[highlight];
+      const item = results[active];
       if (item) go(item);
     } else if (e.key === "Escape") {
       e.preventDefault();
@@ -189,7 +186,7 @@ export default function CommandPalette() {
     <>
       {/* Trigger (lives in the header) */}
       <button
-        onClick={() => setOpen(true)}
+        onClick={openPalette}
         className="group flex items-center gap-2 rounded-lg border border-line bg-bg-2/70 px-3 py-1.5 text-sm text-faint transition-colors hover:border-line hover:text-dim"
         aria-label="Search topics"
       >
@@ -200,7 +197,7 @@ export default function CommandPalette() {
         </kbd>
       </button>
 
-      {mounted && open
+      {open
         ? createPortal(
             <div
               className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[12vh]"
@@ -238,7 +235,7 @@ export default function CommandPalette() {
                     results.map((item, i) => {
                       const meta = KIND_META[item.kind];
                       const Icon = meta.icon;
-                      const activeRow = i === highlight;
+                      const activeRow = i === active;
                       return (
                         <li key={`${item.kind}-${item.href}`} data-idx={i}>
                           <button

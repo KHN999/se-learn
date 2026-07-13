@@ -47,6 +47,7 @@ export default function CoercionDemo({ color }: { color: string }) {
           <input
             value={value}
             onChange={(e) => setValue(e.target.value)}
+            aria-label="value for age"
             className="w-28 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 font-mono text-sm text-text focus:outline-none"
           />
         </label>
@@ -60,6 +61,7 @@ export default function CoercionDemo({ color }: { color: string }) {
               <button
                 key={opt.label}
                 onClick={() => setAsNumber(opt.on)}
+                aria-pressed={active}
                 className="px-3 py-1.5 text-xs transition-colors"
                 style={
                   active

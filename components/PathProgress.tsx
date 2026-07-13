@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { readProgress } from "@/lib/progress";
+import { useProgress } from "@/lib/progress";
 
 export default function PathProgress({
   slugs,
@@ -10,14 +9,9 @@ export default function PathProgress({
   slugs: string[];
   color: string;
 }) {
-  const [done, setDone] = useState(0);
-
-  useEffect(() => {
-    const p = readProgress();
-    setDone(slugs.filter((s) => p[s]).length);
-  }, [slugs]);
-
+  const progress = useProgress();
   const total = slugs.length;
+  const done = slugs.filter((s) => progress[s]).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
 
   return (

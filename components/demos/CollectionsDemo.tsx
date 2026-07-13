@@ -70,6 +70,7 @@ export default function CollectionsDemo({ color }: { color: string }) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          aria-label="item to add or find"
           className="w-32 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 font-mono text-sm text-text focus:outline-none"
         />
         <button
@@ -156,7 +157,7 @@ export default function CollectionsDemo({ color }: { color: string }) {
               className="mt-2 font-mono text-[11px]"
               style={{ color: inSet ? "var(--color-good)" : "var(--color-warn)" }}
             >
-              has(&quot;{target}&quot;) → {inSet ? "yes" : "no"} · O(1)
+              has(&quot;{target}&quot;) → {inSet ? "yes" : "no"} · O(1) avg
             </p>
           )}
         </div>
@@ -189,7 +190,7 @@ export default function CollectionsDemo({ color }: { color: string }) {
               className="mt-2 font-mono text-[11px]"
               style={{ color: inSet ? "var(--color-good)" : "var(--color-warn)" }}
             >
-              get(&quot;{target}&quot;) → {counts.get(target) ?? "—"} · O(1)
+              get(&quot;{target}&quot;) → {counts.get(target) ?? "—"} · O(1) avg
             </p>
           )}
         </div>
@@ -197,8 +198,8 @@ export default function CollectionsDemo({ color }: { color: string }) {
 
       <p className="mt-3 text-sm leading-relaxed text-dim">
         The List walks item by item to answer &ldquo;is it in here?&rdquo; — that
-        is O(n). The Set and Map jump straight to the answer — O(1). Same
-        question, very different cost as the data grows.
+        is O(n). The Set and Map jump almost straight to the answer — O(1) on
+        average. Same question, very different cost as the data grows.
       </p>
     </div>
   );

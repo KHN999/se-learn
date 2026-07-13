@@ -15,12 +15,34 @@ import { batchI } from "@/lib/topics/batch-i";
 // The structure is deliberately fixed so every finished page answers the same
 // questions in the same order — consistency is what keeps the reader oriented.
 
+// Every interactive demo id. The topic page's registry must cover all of these
+// (enforced by `satisfies Record<DemoId, ...>`), and content may only reference
+// one of these — so a typo is a compile error, not a silently blank demo.
+export type DemoId =
+  | "index-scan"
+  | "coercion"
+  | "references"
+  | "control-flow-tracer"
+  | "call-stack"
+  | "class-instances"
+  | "error-propagation"
+  | "collections-compare"
+  | "file-stream"
+  | "array-ops"
+  | "linked-list-ops"
+  | "stack"
+  | "queue"
+  | "hashmap-buckets"
+  | "heap-tree"
+  | "graph-traversal"
+  | "bst";
+
 export type ContentBlock =
   | { type: "para"; text: string }
   | { type: "points"; items: string[] }
   | { type: "note"; text: string }
   | { type: "code"; code: string; caption?: string }
-  | { type: "demo"; demo: string }
+  | { type: "demo"; demo: DemoId }
   | { type: "aside"; title: string; blocks: ContentBlock[] };
 
 export type TopicContent = {
@@ -30,7 +52,7 @@ export type TopicContent = {
   /** Lead with the problem, never the definition. */
   problem: string;
   /** Optional interactive experiment, keyed by id (see topic page registry). */
-  demo?: string;
+  demo?: DemoId;
   /** How it works — minimal technical model. */
   how: ContentBlock[];
   /** The costs are not optional — every technology has them. */
@@ -420,13 +442,13 @@ const queryPlanning: TopicContent = {
 const tree: TopicContent = {
   slug: "tree",
   tagline:
-    "A branching structure that keeps data sorted and searchable in logarithmic time.",
+    "A branching structure that keeps sorted data searchable in about log n steps — when it stays balanced.",
   problem:
     "A plain array is great for reading by position but slow to keep sorted as you insert and delete — every insert can shift everything after it. A linked list inserts cheaply but can't jump to the middle. You want both: fast search and fast insertion in sorted data. What structure gives you that?",
   how: [
     {
       type: "para",
-      text: "A tree stores values in nodes, each linking to child nodes, branching out from a single root. In a binary search tree, each node has up to two children: smaller values go left, larger go right. To find a value you start at the root and go left or right — each step skips half of what remains.",
+      text: "A tree stores values in nodes, each linking to child nodes, branching out from a single root. In a binary search tree, each node has up to two children: smaller values go left, larger go right. To find a value you start at the root and go left or right; in a reasonably balanced tree, each comparison eliminates roughly half the remaining values.",
     },
     {
       type: "para",
@@ -434,7 +456,7 @@ const tree: TopicContent = {
     },
     {
       type: "code",
-      code: "// binary search tree: smaller left, larger right\nfind(10)    // 8 → 12 → 10 — 3 steps, each halving (O(log n))\ninorder()   // 2, 4, 6, 8, 10, 12, 14 — sorted, for free",
+      code: "// binary search tree: smaller left, larger right\nfind(10)    // 8 → 12 → 10 — 3 steps, halving each time (balanced: O(log n))\ninorder()   // 2, 4, 6, 8, 10, 12, 14 — sorted output, O(n)",
       caption: "Search halves the tree each step; in-order traversal comes out sorted.",
     },
     {
@@ -454,7 +476,7 @@ const tree: TopicContent = {
     good: [
       "Keeps data sorted while still supporting fast insert and delete.",
       "O(log n) operations scale to enormous datasets.",
-      "Yields sorted order and range queries almost for free.",
+      "Produces sorted output via in-order traversal (O(n)) and easy range queries.",
     ],
     costs: [
       "Must stay balanced, which adds bookkeeping on every change.",

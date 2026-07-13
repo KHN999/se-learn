@@ -425,7 +425,7 @@ export const batchA: TopicContent[] = [
       },
       {
         type: "para",
-        text: "The choice comes down to the question you ask most. Need order and duplicates? A list. Need fast 'is this in here?' or 'no duplicates'? A set. Need to look a value up by a key? A map. Asking a list 'does this exist?' means scanning every element (O(n)); a set or map answers instantly (O(1)). Watch the difference:",
+        text: "The choice comes down to the question you ask most. Need order and duplicates? A list. Need fast 'is this in here?' or 'no duplicates'? A set. Need to look a value up by a key? A map. Asking a list 'does this exist?' means scanning every element (O(n)); a set or map answers in about one step — O(1) on average, since they're hash-based. Watch the difference:",
       },
       {
         type: "demo",
