@@ -26,6 +26,7 @@ import { AreaIcon } from "@/components/AreaIcon";
 import IndexScanDemo from "@/components/demos/IndexScanDemo";
 import CoercionDemo from "@/components/demos/CoercionDemo";
 import ReferenceDemo from "@/components/demos/ReferenceDemo";
+import ControlFlowDemo from "@/components/demos/ControlFlowDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -127,6 +128,7 @@ function renderDemo(id: string, color: string) {
   if (id === "index-scan") return <IndexScanDemo color={color} />;
   if (id === "coercion") return <CoercionDemo color={color} />;
   if (id === "references") return <ReferenceDemo color={color} />;
+  if (id === "control-flow-tracer") return <ControlFlowDemo color={color} />;
   return null;
 }
 
@@ -233,7 +235,7 @@ export default async function TopicPage({
               <div className="rounded-xl border border-line-soft bg-bg-2/40 p-4">
                 <p className="flex items-center gap-2 text-sm font-medium text-good">
                   <Check className="h-4 w-4" />
-                  Worth it for
+                  {content.tradeoffLabels?.good ?? "Worth it for"}
                 </p>
                 <ul className="mt-3 space-y-2">
                   {content.tradeoffs.good.map((g, i) => (
@@ -247,7 +249,7 @@ export default async function TopicPage({
               <div className="rounded-xl border border-line-soft bg-bg-2/40 p-4">
                 <p className="flex items-center gap-2 text-sm font-medium text-warn">
                   <AlertTriangle className="h-4 w-4" />
-                  What it costs
+                  {content.tradeoffLabels?.costs ?? "What it costs"}
                 </p>
                 <ul className="mt-3 space-y-2">
                   {content.tradeoffs.costs.map((g, i) => (

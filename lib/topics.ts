@@ -34,6 +34,9 @@ export type TopicContent = {
   how: ContentBlock[];
   /** The costs are not optional — every technology has them. */
   tradeoffs: { good: string[]; costs: string[] };
+  /** Optional heading overrides for the two tradeoff columns (e.g. foundational
+   * topics use "What it enables" / "Common mistakes"). */
+  tradeoffLabels?: { good: string; costs: string };
   /** Where you'll actually meet this. */
   realWorld?: string;
   /** Edges to other topics (slugs must exist in curriculum). */

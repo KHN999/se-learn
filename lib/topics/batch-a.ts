@@ -63,47 +63,92 @@ export const batchA: TopicContent[] = [
   },
   {
     slug: "control-flow",
-    tagline: "How a program decides what to do next and how many times to do it.",
+    tagline: "Deciding where execution goes next — and how many times.",
     problem:
-      "You're writing checkout logic: if the cart is empty, stop; if the user has a coupon, apply it; for each item, add its price to a running total. Written top to bottom with no way to branch or repeat, a program can only do one fixed sequence of steps. Real logic needs to choose between paths and to repeat work an amount it doesn't know in advance.",
+      "You're writing checkout logic: total up each item in the cart, and take 10% off if there's a coupon. Written strictly top to bottom, a program can only do one fixed list of steps, once. Real logic has to choose between paths and repeat work a number of times it doesn't know in advance. The whole question is: where does execution go next, and why?",
     how: [
       {
         type: "para",
-        text: "By default statements run in order, one after another. Control flow adds two powers on top of that: selection (do this or that, based on a condition) and iteration (do this again, while a condition holds).",
+        text: "Every program is built from just three ways of moving through code. Sequence: run statements in order, top to bottom. Selection: choose one path or another based on a condition. Iteration: repeat a path until you're done. Everything else is a combination of these three.",
+      },
+      {
+        type: "para",
+        text: "Start with plain sequence — statements run one after another:",
+      },
+      {
+        type: "code",
+        code: "let total = 0\ntotal = total + 10\ntotal = total + 20   // total is now 30",
+        caption: "Sequence — each line runs once, in order.",
+      },
+      {
+        type: "para",
+        text: "Selection adds a decision. A condition decides whether execution takes the true path or the false path:",
+      },
+      {
+        type: "code",
+        code: "if (hasCoupon) {\n  total = total * 0.9    // runs only when hasCoupon is true\n} else {\n  // the other path\n}",
+        caption: "Selection — one branch runs, the other is skipped.",
+      },
+      {
+        type: "para",
+        text: "Iteration repeats a path once per item, so one piece of code can handle a cart of any size:",
+      },
+      {
+        type: "code",
+        code: "let total = 0\nfor (const price of cart) {\n  total = total + price\n}",
+        caption: "Iteration — the body runs once for each item in the cart.",
+      },
+      {
+        type: "para",
+        text: "Reading a loop means replaying it one step at a time. Trace it by hand with cart = [10, 20, 5] and you can see exactly where execution goes and what changes on each pass:",
+      },
+      {
+        type: "code",
+        code: "cart = [10, 20, 5]\niteration 1 -> total = 0  + 10 = 10\niteration 2 -> total = 10 + 20 = 30\niteration 3 -> total = 30 + 5  = 35\nafter loop  -> total = 35",
+        caption: "The same trace, done for you — one step at a time.",
+      },
+      {
+        type: "demo",
+        demo: "control-flow-tracer",
+      },
+      {
+        type: "note",
+        text: "A condition ultimately decides whether execution follows the true path or the false path. Some languages require a real boolean; others (JavaScript, Python, and more) accept any value and convert it using truthiness rules — so 0, an empty string, and null count as false. That link between conditions and value types is exactly why Variables & types comes first.",
       },
       {
         type: "points",
         items: [
-          "if / else if / else: pick one branch based on boolean conditions.",
-          "switch / match: choose among many cases of one value more cleanly than a long if-chain.",
-          "while / for: repeat a block, either while a condition is true or once per item in a collection.",
-          "break and continue: exit a loop early, or skip to its next iteration.",
+          "break ends the nearest loop immediately.",
+          "continue skips the rest of the current iteration and starts the next one.",
+          "Both are handy, but too many early exits scattered through a loop make it hard to see where execution actually goes.",
         ],
       },
-      {
-        type: "note",
-        text: "Every loop needs a way to end. A condition that never becomes false is an infinite loop — a common cause of a program that 'hangs' and pins the CPU.",
-      },
     ],
+    tradeoffLabels: { good: "What it enables", costs: "Common mistakes" },
     tradeoffs: {
       good: [
-        "A handful of constructs express any decision procedure a program needs.",
-        "Loops let one piece of code handle inputs of any size.",
-        "Guard clauses (return early on bad input) keep the main path flat and readable.",
+        "Making decisions — responding differently to different inputs and data.",
+        "Repeating work — one loop handles a list of any length.",
+        "Combining sequence, selection, and iteration to express any procedure a program needs.",
       ],
       costs: [
-        "Deeply nested conditions become hard to follow and easy to get wrong.",
-        "Off-by-one errors in loop bounds are among the most common bugs.",
-        "The cost of a loop scales with how many times it runs — the root of most performance analysis.",
+        "Conditions that are incomplete or backwards, so the wrong branch runs.",
+        "Off-by-one errors at loop boundaries — starting or stopping one step early or late.",
+        "Infinite loops: a condition that never becomes false, so the program hangs.",
+        "Deep nesting of ifs and loops that no one can follow.",
+        "Modifying a collection while looping over it.",
+        "Unexpected truthy/falsy values sending a condition the wrong way.",
       ],
     },
     realWorld:
-      "You use control flow in nearly every function you write. When code is described as 'spaghetti,' it usually means the control flow — the tangle of nested ifs and loops — has grown past what anyone can hold in their head.",
+      "You use control flow in nearly every function you write. When code is called 'spaghetti', it usually means the control flow — the tangle of nested ifs and loops — has grown past what anyone can hold in their head. Keeping each decision and loop small and obvious is most of what readable code means.",
     related: [
+      { slug: "variables-types", note: "Conditions test booleans/truthiness; counters and totals are variables." },
       { slug: "functions", note: "Bundles a piece of control flow behind a name." },
+      { slug: "collections", note: "for-each loops iterate over lists and maps." },
       { slug: "recursion", note: "An alternative to loops for repeating work." },
-      { slug: "error-handling", note: "Branches the program onto a failure path." },
       { slug: "big-o-notation", note: "How many times a loop runs determines cost." },
+      { slug: "error-handling", note: "Branches the program onto a failure path." },
     ],
   },
   {
