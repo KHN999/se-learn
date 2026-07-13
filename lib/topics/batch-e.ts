@@ -7,6 +7,7 @@ export const batchE: TopicContent[] = [
       "One deployable application that holds the whole system's code and runs as a single process.",
     problem:
       "You're building a new product and need users, billing, and a catalog. You could split each into its own service running on its own machine — but you have three engineers and no traffic yet. Standing up separate services, networks, and deployments for each would mean weeks of plumbing before you ship a single feature. Where should the code live so you can move fast now?",
+    demo: "arch-styles",
     how: [
       {
         type: "para",
@@ -15,6 +16,15 @@ export const batchE: TopicContent[] = [
       {
         type: "para",
         text: "Because it's a single program, there's no network between parts: calls are fast and can't half-fail, and a transaction can span the whole request. You deploy the whole thing at once and scale it by running more identical copies behind a load balancer.",
+      },
+      {
+        type: "code",
+        code: "function handleCheckout(req) {\n  const user = users.load(req.userId)   // in-process call\n  billing.charge(user, req.total)       // in-process call\n  catalog.reserve(req.items)            // all one transaction\n  return render(user)\n}\n// one artifact — scaled by running N identical copies behind a load balancer",
+        caption: "Inside one process, module calls are ordinary function calls: fast, unable to half-fail, and able to share a single transaction.",
+      },
+      {
+        type: "demo",
+        demo: "arch-styles",
       },
       {
         type: "note",
@@ -66,6 +76,7 @@ export const batchE: TopicContent[] = [
       "One deployable app, but internally split into modules with enforced boundaries.",
     problem:
       "Your monolith works, but three years in, the billing code imports directly from the catalog code, which reaches into the user code, which calls back into billing. Changing anything means touching everything, and no one can say where a feature begins or ends. You don't want the operational pain of microservices — but you can't keep living in a mud ball. Can you get boundaries without going distributed?",
+    demo: "arch-styles",
     how: [
       {
         type: "para",
@@ -74,6 +85,15 @@ export const batchE: TopicContent[] = [
       {
         type: "para",
         text: "The discipline is what makes it work: the boundaries are chosen along business capabilities, and something enforces them — package structure, build rules, or lint checks that fail the build when one module imports another's internals. You keep in-process speed and single-database transactions while gaining the clarity microservices are praised for.",
+      },
+      {
+        type: "code",
+        code: "// billing may use catalog's public interface, but not its internals\nimport { catalog } from \"@/catalog\"       // OK: public entry point\nimport { priceRow } from \"@/catalog/db\"   // BUILD FAILS: reaching inside\n\ncatalog.reserve(items)   // the only sanctioned way across the boundary",
+        caption: "A build or lint rule enforces the seam: modules call each other's public interfaces and never touch internals.",
+      },
+      {
+        type: "demo",
+        demo: "arch-styles",
       },
       {
         type: "points",
@@ -130,6 +150,7 @@ export const batchE: TopicContent[] = [
       "Splitting a system into many small services that deploy and scale independently.",
     problem:
       "Your monolith has 200 engineers committing to it. Every deploy is a coordinated event, the search team's slow code takes down checkout, and the whole thing must scale together even though only search is under load. The single codebase has become the bottleneck for how fast the organization can move. How do you let teams ship independently?",
+    demo: "arch-styles",
     how: [
       {
         type: "para",
@@ -138,6 +159,15 @@ export const batchE: TopicContent[] = [
       {
         type: "para",
         text: "The core rule is that a service is the sole owner of its data: nobody else reaches into its database. That's what lets a team change their internals freely. The cost is that every in-process function call that crossed a boundary is now a network call — which is slower, can time out, and can fail while the caller keeps running.",
+      },
+      {
+        type: "code",
+        code: "# each service deploys, scales, and owns its data independently\nservices:\n  orders:    { image: orders:1.4,   db: orders-db }\n  payments:  { image: payments:2.1, db: payments-db }\n  catalog:   { image: catalog:0.9,  db: catalog-db }\n# orders -> payments is now a network call (HTTP/gRPC), not a function call",
+        caption: "Each service is its own deployable with its own datastore; a call that used to be in-process now crosses the network.",
+      },
+      {
+        type: "demo",
+        demo: "arch-styles",
       },
       {
         type: "note",
@@ -189,10 +219,20 @@ export const batchE: TopicContent[] = [
       "A single entry point that routes, authenticates, and shapes requests to many backend services.",
     problem:
       "You've split into twenty microservices. Now your mobile app needs to know the address of each one, handle auth against every service separately, and make ten calls to render a single screen. Every service also has to re-implement rate limiting and token checks. Exposing all of that raw to the outside world is a mess and a security hazard. Who should clients talk to instead?",
+    demo: "api-gateway",
     how: [
       {
         type: "para",
         text: "An API gateway sits in front of your services as the one public endpoint. Clients call the gateway; it looks at the request and routes it to the right internal service. Along the way it handles the concerns every service would otherwise duplicate — authentication, rate limiting, TLS termination, logging — in one place.",
+      },
+      {
+        type: "code",
+        code: "GET api.shop.com/orders/42\n  -> gateway: terminate TLS, verify token, check rate limit\n  -> match route  /orders/*  ->  orders-service\n  -> forward to a healthy orders-service instance (private)\n\n# routing table\n/orders/*   -> orders-service\n/users/*    -> users-service\n/catalog/*  -> catalog-service",
+        caption: "Clients hit one public address; the gateway authenticates and rate-limits once, then routes each path to the right internal service.",
+      },
+      {
+        type: "demo",
+        demo: "api-gateway",
       },
       {
         type: "points",
@@ -253,10 +293,20 @@ export const batchE: TopicContent[] = [
       "How services find each other's network addresses when those addresses keep changing.",
     problem:
       "The orders service needs to call the payments service. In a container world, payments might be running on five machines whose IP addresses change every time one restarts or the system scales up. Hard-coding an address breaks the moment that instance dies. How does orders reliably find a live payments instance right now?",
+    demo: "service-discovery",
     how: [
       {
         type: "para",
         text: "Service discovery keeps a live registry of which instances of each service exist and where they are. When a service starts, it registers itself ('I'm payments, at this address, and I'm healthy'); when it dies or fails a health check, it's removed. A caller asks the registry for 'a healthy payments instance' and gets a current address.",
+      },
+      {
+        type: "code",
+        code: "# payments instances register themselves on startup\nregister  payments  ->  10.0.0.7:8080  (healthy)\nregister  payments  ->  10.0.0.9:8080  (healthy)\n\n# orders resolves the name instead of hard-coding an address\nlookup    payments  ->  10.0.0.9:8080     // a live instance, right now\n# 10.0.0.7 fails its health check -> dropped from the registry",
+        caption: "Instances register on startup and drop out when unhealthy; callers resolve a name to a currently-live address at call time.",
+      },
+      {
+        type: "demo",
+        demo: "service-discovery",
       },
       {
         type: "points",
@@ -317,6 +367,7 @@ export const batchE: TopicContent[] = [
       "A component in front of your servers that spreads traffic across them and speaks for them.",
     problem:
       "One web server can handle a thousand requests a second; you're getting five thousand. You add four more servers — but clients only know one address, and if one server dies you don't want users hitting a dead machine. Something has to sit in front, take every request, and hand it to a server that's alive and not overloaded. What is that something?",
+    demo: "load-balance",
     how: [
       {
         type: "para",
@@ -325,6 +376,15 @@ export const batchE: TopicContent[] = [
       {
         type: "para",
         text: "It decides where each request goes using a strategy — round-robin (take turns), least-connections (send to the least busy), or hashing on something like the client's IP for stickiness. Health checks let it stop sending traffic to a server that stops responding, so a dead backend simply drops out of rotation.",
+      },
+      {
+        type: "code",
+        code: "upstream web_backends {\n  least_conn;                 # send each request to the least-busy server\n  server 10.0.0.11:8080;\n  server 10.0.0.12:8080;\n  server 10.0.0.13:8080;      # a failed health check drops it from rotation\n}\nserver {\n  listen 443;                 # one public address; TLS terminates here\n  location / { proxy_pass http://web_backends; }\n}",
+        caption: "An nginx reverse proxy spreads requests across a pool of identical backends behind a single public address.",
+      },
+      {
+        type: "demo",
+        demo: "load-balance",
       },
       {
         type: "points",

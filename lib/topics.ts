@@ -69,7 +69,11 @@ export type DemoId =
   | "prop-drilling"
   | "a11y-tree"
   | "bundler"
-  | "web-vitals";
+  | "web-vitals"
+  | "arch-styles"
+  | "api-gateway"
+  | "load-balance"
+  | "service-discovery";
 
 export type ContentBlock =
   | { type: "para"; text: string }

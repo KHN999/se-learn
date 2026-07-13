@@ -71,6 +71,10 @@ import StateMgmtDemo from "@/components/demos/StateMgmtDemo";
 import A11yDemo from "@/components/demos/A11yDemo";
 import BundlerDemo from "@/components/demos/BundlerDemo";
 import WebVitalsDemo from "@/components/demos/WebVitalsDemo";
+import ArchStylesDemo from "@/components/demos/ArchStylesDemo";
+import ApiGatewayDemo from "@/components/demos/ApiGatewayDemo";
+import LoadBalanceDemo from "@/components/demos/LoadBalanceDemo";
+import ServiceDiscoveryDemo from "@/components/demos/ServiceDiscoveryDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -237,6 +241,10 @@ const DEMOS = {
   "a11y-tree": (c: string) => <A11yDemo color={c} />,
   "bundler": (c: string) => <BundlerDemo color={c} />,
   "web-vitals": (c: string) => <WebVitalsDemo color={c} />,
+  "arch-styles": (c: string) => <ArchStylesDemo color={c} />,
+  "api-gateway": (c: string) => <ApiGatewayDemo color={c} />,
+  "load-balance": (c: string) => <LoadBalanceDemo color={c} />,
+  "service-discovery": (c: string) => <ServiceDiscoveryDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {
