@@ -539,10 +539,16 @@ export const batchD: TopicContent[] = [
       "A convention for designing web APIs around resources and standard HTTP verbs, so they're predictable without a manual.",
     problem:
       "Two teams build APIs. One has endpoints like /getUserData, /updateUserInfo, and /removeAccount — each named differently, each with its own quirks. Every new endpoint is a thing you must look up. Multiply that across a company and nothing is guessable. Is there a consistent way to structure an API so that once you know the pattern, you can predict the rest?",
+    demo: "rest-resource",
     how: [
       {
         type: "para",
         text: "REST organizes an API around resources (nouns) identified by URLs, and uses HTTP's own verbs to act on them. Instead of inventing a verb per action, you point a standard method at a resource: GET /users/42 reads it, DELETE /users/42 removes it, POST /users creates one. The URL says what; the method says how.",
+      },
+      {
+        type: "code",
+        code: "GET    /users/42        → 200  read one user\nPOST   /users           → 201  created a new user\nPATCH  /users/42        → 200  updated some fields\nDELETE /users/42        → 204  removed it\nGET    /users/42/orders → 200  that user's orders",
+        caption: "The URL names the resource (a noun); the method is the verb; the status code is the outcome.",
       },
       {
         type: "points",
@@ -557,6 +563,10 @@ export const batchD: TopicContent[] = [
       {
         type: "para",
         text: "Because it leans on HTTP's existing semantics, a REST API is largely predictable: knowing the resource and the method, you can guess the call. It also inherits HTTP's caching, and its statelessness means any server in a pool can handle any request.",
+      },
+      {
+        type: "demo",
+        demo: "rest-resource",
       },
       {
         type: "note",
@@ -593,10 +603,16 @@ export const batchD: TopicContent[] = [
       "How a server knows which client is calling and whether to trust it — without a login form on every request.",
     problem:
       "Your API sits on the public internet, so anyone can send it a request. But only the right users should read their own data, and only your own app should hit certain endpoints. There's no browser login screen for a program calling an API — so how does each request prove who it is and that it's allowed, given HTTP forgets you after every call?",
+    demo: "api-auth",
     how: [
       {
         type: "para",
         text: "Because HTTP is stateless, every API request must carry its own proof of identity, usually in the Authorization header. The server checks that credential before doing anything. The common approaches trade simplicity against security and flexibility.",
+      },
+      {
+        type: "code",
+        code: "GET /v1/charges HTTP/1.1\nAuthorization: Bearer sk_live_a1b2c3…    ← API key: which app is calling\n\nGET /me HTTP/1.1\nAuthorization: Bearer eyJhbGci….sig      ← JWT: which user, signed and verifiable\n\n// Always over HTTPS, never in a URL or a log; scoped and revocable",
+        caption: "The credential rides in the Authorization header — a key names the app, a signed token names the user.",
       },
       {
         type: "points",
@@ -610,6 +626,10 @@ export const batchD: TopicContent[] = [
       {
         type: "para",
         text: "Two ideas underpin all of them. Authentication answers 'who are you' (verifying identity); authorization answers 'what are you allowed to do' (checking permissions). A request can be perfectly authenticated and still forbidden. Keeping the two distinct is essential to getting access control right.",
+      },
+      {
+        type: "demo",
+        demo: "api-auth",
       },
       {
         type: "note",
@@ -646,10 +666,16 @@ export const batchD: TopicContent[] = [
       "A fast, contract-first way for services to call each other's functions over the network as if they were local.",
     problem:
       "You've split your system into services that call each other constantly, thousands of times a second. Sending verbose JSON over HTTP for each call wastes CPU parsing text and bandwidth carrying field names, and there's no enforced contract — one team renames a field and the caller breaks at runtime. For internal, high-volume service-to-service traffic, is there something tighter than REST plus JSON?",
+    demo: "grpc",
     how: [
       {
         type: "para",
         text: "gRPC lets you define your service's methods and message types once, in a .proto file (Protocol Buffers). From that single contract it generates client and server code in many languages, so calling a remote method looks like calling a local function — the framework handles serialization and transport for you.",
+      },
+      {
+        type: "code",
+        code: '// user.proto — the one shared contract\nsyntax = "proto3";\n\nmessage GetUserRequest { int32 id = 1; }\nmessage User          { int32 id = 1; string name = 2; }\n\nservice UserService {\n  rpc GetUser(GetUserRequest) returns (User);        // one call, one reply\n  rpc ListUsers(Empty)        returns (stream User); // server streaming\n}',
+        caption: "One .proto defines the messages and methods; codegen turns it into typed clients and servers in any language.",
       },
       {
         type: "points",
@@ -664,6 +690,10 @@ export const batchD: TopicContent[] = [
       {
         type: "para",
         text: "The payoff is speed and safety for internal traffic: binary payloads and HTTP/2 make calls cheap, and the generated types mean a changed contract breaks the build rather than production. The cost is that it's far less friendly to browsers and humans than plain JSON over HTTP.",
+      },
+      {
+        type: "demo",
+        demo: "grpc",
       },
       {
         type: "note",
@@ -700,10 +730,16 @@ export const batchD: TopicContent[] = [
       "A query language that lets the client ask for exactly the data it needs in one request — no more, no less.",
     problem:
       "Your mobile screen needs a user's name, their last three orders, and each order's total. A REST API makes you call /users/42, then /users/42/orders, then loop for the details — several round trips, and each returns far more fields than the screen uses. Over a slow phone connection that's painfully wasteful. Can the client just describe the exact shape of data it wants and get it back in one go?",
+    demo: "graphql",
     how: [
       {
         type: "para",
         text: "GraphQL exposes a single endpoint and a typed schema of everything available. The client sends a query describing precisely the fields and relationships it wants, nested as deeply as needed, and the server returns exactly that shape — usually in one round trip. No more over-fetching unused fields or under-fetching and calling again.",
+      },
+      {
+        type: "code",
+        code: '# one endpoint, one request — ask for exactly these fields\nquery {\n  user(id: 42) {\n    name\n    orders(last: 3) { total }\n  }\n}\n\n# the response mirrors that shape — no extra fields\n{ "user": { "name": "Ada", "orders": [ { "total": 42.0 } ] } }',
+        caption: "The client dictates the response shape — a name plus the last three order totals, in a single round trip.",
       },
       {
         type: "points",
@@ -717,6 +753,10 @@ export const batchD: TopicContent[] = [
       {
         type: "para",
         text: "This shifts power to the client: front-end teams can build new screens without waiting for new back-end endpoints. But the cost moves to the server, which must resolve arbitrary query shapes efficiently — and a naively resolved nested query is a fast route to the N+1 problem and expensive, hard-to-cache requests.",
+      },
+      {
+        type: "demo",
+        demo: "graphql",
       },
       {
         type: "note",
@@ -753,10 +793,16 @@ export const batchD: TopicContent[] = [
       "Capping how many requests a client can make in a window, to protect a service from overload and abuse.",
     problem:
       "One buggy client stuck in a retry loop, or one deliberate attacker, can fire thousands of requests a second at your API — enough to exhaust your servers and take the service down for everyone else. A single free-tier user could also run up your bill scraping data all day. How do you stop any one caller from consuming more than its fair share?",
+    demo: "token-bucket",
     how: [
       {
         type: "para",
         text: "Rate limiting counts each client's requests over a time window and rejects those beyond a set threshold, usually returning status 429 (Too Many Requests) with a header telling the client when to try again. The client is identified by API key, user ID, or IP address.",
+      },
+      {
+        type: "code",
+        code: "GET /v1/search HTTP/1.1\nAuthorization: Bearer sk_live_…\n\nHTTP/1.1 429 Too Many Requests\nRetry-After: 30              ← wait 30s before retrying\nX-RateLimit-Limit: 100       ← your cap for the window\nX-RateLimit-Remaining: 0     ← none left right now",
+        caption: "Over the limit, the server returns 429 and uses headers to say how much quota is left and when to try again.",
       },
       {
         type: "points",
@@ -770,6 +816,10 @@ export const batchD: TopicContent[] = [
       {
         type: "para",
         text: "It's both a stability tool and a security control. For stability, it keeps one heavy user from degrading the service for everyone and helps prevent cascading failure. For security, it blunts brute-force logins, credential stuffing, and scraping — which is why login and password endpoints are usually limited the hardest.",
+      },
+      {
+        type: "demo",
+        demo: "token-bucket",
       },
       {
         type: "note",

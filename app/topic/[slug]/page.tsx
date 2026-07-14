@@ -137,6 +137,10 @@ import ComposeDemo from "@/components/demos/ComposeDemo";
 import CiCdDemo from "@/components/demos/CiCdDemo";
 import K8sDemo from "@/components/demos/K8sDemo";
 import ObservabilityDemo from "@/components/demos/ObservabilityDemo";
+import RestDemo from "@/components/demos/RestDemo";
+import ApiAuthDemo from "@/components/demos/ApiAuthDemo";
+import GrpcDemo from "@/components/demos/GrpcDemo";
+import GraphqlDemo from "@/components/demos/GraphqlDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -371,6 +375,10 @@ const DEMOS = {
   "ci-cd": (c: string) => <CiCdDemo color={c} />,
   "kubernetes": (c: string) => <K8sDemo color={c} />,
   "observability": (c: string) => <ObservabilityDemo color={c} />,
+  "rest-resource": (c: string) => <RestDemo color={c} />,
+  "api-auth": (c: string) => <ApiAuthDemo color={c} />,
+  "grpc": (c: string) => <GrpcDemo color={c} />,
+  "graphql": (c: string) => <GraphqlDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {

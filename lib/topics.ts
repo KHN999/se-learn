@@ -137,7 +137,11 @@ export type DemoId =
   | "compose"
   | "ci-cd"
   | "kubernetes"
-  | "observability";
+  | "observability"
+  | "rest-resource"
+  | "api-auth"
+  | "grpc"
+  | "graphql";
 
 export type ContentBlock =
   | { type: "para"; text: string }
