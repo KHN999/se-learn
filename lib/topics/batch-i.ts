@@ -427,10 +427,20 @@ export const batchI: TopicContent[] = [
       "Renting computing — servers, storage, networking — on demand instead of owning the hardware.",
     problem:
       "You want to launch an app. The old way: forecast your peak traffic, buy servers for it, rack them in a data center, wait weeks, and pay for that capacity whether or not anyone shows up. Guess too low and you crash on launch day; guess too high and you've spent a fortune on idle machines. How do you get servers in minutes and only pay for what you use?",
+    demo: "cloud-vs-onprem",
     how: [
       {
         type: "para",
         text: "The cloud is other people's computers — huge data centers run by providers like AWS, Google Cloud, and Azure — rented to you over the internet through APIs. You provision a server, database, or storage bucket in seconds, scale it up or down as demand changes, and pay by the hour, second, or request. The provider handles the buildings, power, cooling, and hardware.",
+      },
+      {
+        type: "code",
+        code: "# On-prem (capex): weeks of lead time, pay for peak capacity 24/7\n#   forecast peak load → buy servers → rack, cable, cool → pay whether idle or not\n\n# Cloud (opex): minutes, pay only for what actually runs\n$ aws ec2 run-instances --image-id ami-0abc --instance-type t3.micro --count 1\n   → i-0a1b2c3d   running in ~30s\n\n$ aws ec2 terminate-instances --instance-ids i-0a1b2c3d   # billing stops here",
+        caption: "Owning means paying for peak capacity around the clock; renting gives you a server in seconds and stops billing the moment you stop.",
+      },
+      {
+        type: "demo",
+        demo: "cloud-vs-onprem",
       },
       {
         type: "points",
@@ -491,10 +501,20 @@ export const batchI: TopicContent[] = [
       "Running code in response to events without provisioning or managing any servers yourself.",
     problem:
       "You've got a small job: resize an image whenever someone uploads one. It runs a few hundred times a day, for a second each. To host it the traditional way, you'd rent a server that sits idle 99% of the time, and you'd still have to patch it, scale it, and keep it alive at 3am. Why pay for and babysit a whole machine to run a function that's mostly asleep?",
+    demo: "serverless",
     how: [
       {
         type: "para",
         text: "Serverless (specifically Functions-as-a-Service, like AWS Lambda) lets you upload a function and a trigger — an HTTP request, a file upload, a queue message, a schedule. The provider runs your code only when the trigger fires, spins up capacity automatically for as many concurrent events as arrive, and charges you per invocation and per millisecond of run time. When nothing's happening, you pay nothing.",
+      },
+      {
+        type: "code",
+        code: "// handler.js — invoked only when a file lands in the bucket; scales to zero when idle\nexport async function handler(event) {\n  const key = event.Records[0].s3.object.key;   // the S3 upload that triggered us\n  const image = await s3.get(key);\n  await s3.put(`thumbs/${key}`, resize(image, 200));\n  return { status: \"ok\" };                       // billed per call + ms of runtime\n}",
+        caption: "No server to keep alive: the provider runs this only on the upload event, scaling out per concurrent event and billing per invocation.",
+      },
+      {
+        type: "demo",
+        demo: "serverless",
       },
       {
         type: "points",
@@ -555,10 +575,20 @@ export const batchI: TopicContent[] = [
       "Controlling what can reach your cloud resources, and who is allowed to do what to them.",
     problem:
       "You spin up a database in the cloud and, to get it working fast, leave it open to the internet with a simple password. Weeks later it's found by an automated scanner and your customer data is copied out. Meanwhile a teammate's leaked access key had permission to delete everything, because it was easier to grant full access than figure out the exact rights. In the cloud, a misconfigured network rule or over-broad permission is the most common way things get breached.",
+    demo: "iam-policy",
     how: [
       {
         type: "para",
         text: "Two layers control access. Networking decides what can reach a resource: private networks (VPCs), subnets, and firewall rules (security groups) that allow or deny traffic by IP, port, and protocol. IAM (Identity and Access Management) decides who can do what: policies that grant specific identities permission to specific actions on specific resources.",
+      },
+      {
+        type: "code",
+        code: "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [{\n    \"Effect\": \"Allow\",\n    \"Action\": [\"s3:GetObject\"],                       // one action...\n    \"Resource\": \"arn:aws:s3:::reports-bucket/2026/*\"  // ...on one path\n  }]\n}\n// Everything not explicitly allowed is denied by default.\n// Avoid:  \"Action\": \"s3:*\",  \"Resource\": \"*\"   ← a wildcard that grants far too much.",
+        caption: "Least privilege: grant exactly one action on one resource. Everything else is denied by default; the wildcard version is how buckets leak.",
+      },
+      {
+        type: "demo",
+        demo: "iam-policy",
       },
       {
         type: "points",
@@ -619,10 +649,20 @@ export const batchI: TopicContent[] = [
       "Packaging an app with everything it needs so it runs the same on any machine.",
     problem:
       "Your code works perfectly on your laptop, but when a teammate runs it, it crashes — different Python version, a missing library, a config file in the wrong place. Multiply that across every developer's machine, the CI server, and production, and 'works on my machine' becomes a daily tax. How do you ship an app so it behaves identically everywhere?",
+    demo: "container",
     how: [
       {
         type: "para",
         text: "A container bundles your application together with its dependencies, libraries, and runtime into a single image. That image runs as an isolated process on any machine with a container runtime, using the host's kernel but with its own filesystem, network, and process view. Because the image is self-contained and immutable, the same one runs identically on a laptop, in CI, and in production.",
+      },
+      {
+        type: "code",
+        code: "# Dockerfile — package the app plus its exact deps into one portable image\nFROM node:20-slim               # base OS + runtime layer (cached)\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci                       # dependency layer — rebuilt only when deps change\nCOPY . .\nEXPOSE 3000\nCMD [\"node\", \"server.js\"]        # the one process the container runs",
+        caption: "The image is built in cached layers (OS, deps, code) — the same immutable artifact then runs identically on any host with a runtime.",
+      },
+      {
+        type: "demo",
+        demo: "container",
       },
       {
         type: "points",
@@ -683,10 +723,20 @@ export const batchI: TopicContent[] = [
       "Defining and running a whole set of containers together with one file and one command.",
     problem:
       "Your app isn't just one container — it's an API, a Postgres database, and a Redis cache, all needing to start up, find each other on a network, and get the right environment variables. Starting each by hand with the correct flags, in the right order, every time you sit down to work, is tedious and error-prone. New teammates spend a day just getting the stack running. How do you describe the whole system once and bring it up with a single command?",
+    demo: "compose",
     how: [
       {
         type: "para",
         text: "Docker Compose lets you declare all your services in a single YAML file — which images to run, how they connect, what ports to expose, what environment variables and volumes they need. Then 'docker compose up' starts them all together on a shared network where they can reach each other by service name, and 'docker compose down' tears it all back down.",
+      },
+      {
+        type: "code",
+        code: "# compose.yaml — one file describes the whole multi-container stack\nservices:\n  web:\n    build: .\n    ports: [\"3000:3000\"]\n    environment:\n      DATABASE_URL: postgres://app@db:5432/app   # reach the db by service name\n    depends_on: [db, redis]\n  db:\n    image: postgres:16\n    volumes: [\"pgdata:/var/lib/postgresql/data\"]  # persist data across restarts\n  redis:\n    image: redis:7\nvolumes:\n  pgdata:",
+        caption: "`docker compose up` brings web, db, and redis up together on one network, where they find each other by name; `down` tears it all back down.",
+      },
+      {
+        type: "demo",
+        demo: "compose",
       },
       {
         type: "points",
@@ -747,10 +797,20 @@ export const batchI: TopicContent[] = [
       "Automatically building, testing, and shipping code every time it changes.",
     problem:
       "A team merges everyone's work manually once a month, and integration day is chaos: conflicts everywhere, tests nobody ran, a release built by hand on someone's laptop following a checklist in a wiki. When it breaks in production, no one's sure which of a hundred changes caused it. The longer code sits unintegrated and the more manual the release, the more each deploy becomes a risky, dreaded event. How do you make shipping boring and frequent instead?",
+    demo: "ci-cd",
     how: [
       {
         type: "para",
         text: "CI (Continuous Integration) means every change is merged frequently into a shared branch and automatically built and tested, so problems surface within minutes of the commit that caused them. CD (Continuous Delivery/Deployment) extends the pipeline to automatically package and release that code — to a staging environment always ready to ship, or all the way to production. A pipeline is just the ordered set of automated steps a change passes through.",
+      },
+      {
+        type: "code",
+        code: "# .github/workflows/ci.yml — runs automatically on every push and pull request\non: [push, pull_request]\njobs:\n  build-test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: npm ci\n      - run: npm run lint\n      - run: npm test                                   # a red step blocks the merge\n      - run: docker build -t app:${{ github.sha }} .    # build the artifact once",
+        caption: "Every push triggers build, lint, and test; a failing step blocks the merge, so broken code never reaches the shared branch.",
+      },
+      {
+        type: "demo",
+        demo: "ci-cd",
       },
       {
         type: "points",
@@ -812,10 +872,20 @@ export const batchI: TopicContent[] = [
       "A system that runs, schedules, and heals containers across a fleet of machines.",
     problem:
       "You've containerized your app and now run dozens of copies across ten servers. A machine dies at midnight — who notices and restarts its containers elsewhere? Traffic spikes — who launches more copies and load-balances across them? You push a new version — who rolls it out gradually and rolls back if it crashes? Doing all this by hand across a fleet is a full-time firefighting job. Something has to manage the containers for you.",
+    demo: "kubernetes",
     how: [
       {
         type: "para",
         text: "Kubernetes is a container orchestrator. You declare the desired state — 'run 5 copies of this image, expose it on this port, keep it healthy' — and Kubernetes continuously works to make reality match. It schedules containers onto machines, restarts them when they crash, moves them off dead nodes, scales them up and down, and routes traffic to the healthy ones.",
+      },
+      {
+        type: "code",
+        code: "# deployment.yaml — you declare the desired state, not the steps to get there\napiVersion: apps/v1\nkind: Deployment\nmetadata: { name: web }\nspec:\n  replicas: 3                       # keep 3 pods alive at all times\n  selector: { matchLabels: { app: web } }\n  template:\n    metadata: { labels: { app: web } }\n    spec:\n      containers:\n        - name: web\n          image: app:1.4.2\n          ports: [{ containerPort: 3000 }]\n\n$ kubectl apply -f deployment.yaml   # kill a pod or lose a node and it starts a replacement",
+        caption: "You declare replicas: 3; Kubernetes reconciles reality to match, rescheduling a replacement whenever a pod or node dies.",
+      },
+      {
+        type: "demo",
+        demo: "kubernetes",
       },
       {
         type: "points",
@@ -877,10 +947,20 @@ export const batchI: TopicContent[] = [
       "Being able to understand what a running system is doing from the outside, especially when it breaks.",
     problem:
       "It's 2am and your service is returning errors for some users but not others. You have no idea why. Was it a slow database? A bad deploy? One overloaded server out of twenty? Without a way to see inside a running system, debugging production is guesswork — you're staring at a black box while customers suffer. How do you make a live system explain itself?",
+    demo: "observability",
     how: [
       {
         type: "para",
         text: "Observability is the practice of instrumenting a system so you can ask questions about its behavior after the fact, without shipping new code. It rests on three kinds of telemetry: logs (timestamped records of events), metrics (numbers aggregated over time, like request rate and error rate), and traces (the path of a single request as it hops across services). Together they let you go from 'something's wrong' to 'here's exactly where and why.'",
+      },
+      {
+        type: "code",
+        code: "// 1. LOG — one structured event, carrying a trace id so it can be correlated\n{\"level\":\"error\",\"msg\":\"checkout failed\",\"trace_id\":\"a1b2\",\"user\":\"u_42\",\"ms\":812}\n\n# 2. METRIC — aggregated over time; cheap to store and alert on (Prometheus)\nhttp_requests_total{route=\"/checkout\",status=\"500\"}          37\nhttp_request_duration_seconds{route=\"/checkout\",quantile=\"0.99\"}  0.812\n\n# 3. TRACE — one request across services; find the slow hop\ncheckout  812ms\n ├─ auth       12ms\n └─ payments  790ms   ← the bottleneck",
+        caption: "Logs say what happened, metrics show the trend to alert on, traces reveal which hop is slow — the shared trace id ties them together.",
+      },
+      {
+        type: "demo",
+        demo: "observability",
       },
       {
         type: "points",

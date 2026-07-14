@@ -129,6 +129,14 @@ import EventualDemo from "@/components/demos/EventualDemo";
 import IdempotencyDemo from "@/components/demos/IdempotencyDemo";
 import RetryDemo from "@/components/demos/RetryDemo";
 import ConsensusDemo from "@/components/demos/ConsensusDemo";
+import CloudDemo from "@/components/demos/CloudDemo";
+import ServerlessDemo from "@/components/demos/ServerlessDemo";
+import IamDemo from "@/components/demos/IamDemo";
+import ContainerDemo from "@/components/demos/ContainerDemo";
+import ComposeDemo from "@/components/demos/ComposeDemo";
+import CiCdDemo from "@/components/demos/CiCdDemo";
+import K8sDemo from "@/components/demos/K8sDemo";
+import ObservabilityDemo from "@/components/demos/ObservabilityDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -355,6 +363,14 @@ const DEMOS = {
   "idempotency": (c: string) => <IdempotencyDemo color={c} />,
   "retry-backoff": (c: string) => <RetryDemo color={c} />,
   "consensus": (c: string) => <ConsensusDemo color={c} />,
+  "cloud-vs-onprem": (c: string) => <CloudDemo color={c} />,
+  "serverless": (c: string) => <ServerlessDemo color={c} />,
+  "iam-policy": (c: string) => <IamDemo color={c} />,
+  "container": (c: string) => <ContainerDemo color={c} />,
+  "compose": (c: string) => <ComposeDemo color={c} />,
+  "ci-cd": (c: string) => <CiCdDemo color={c} />,
+  "kubernetes": (c: string) => <K8sDemo color={c} />,
+  "observability": (c: string) => <ObservabilityDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {

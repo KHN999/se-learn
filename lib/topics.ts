@@ -129,7 +129,15 @@ export type DemoId =
   | "eventual-consistency"
   | "idempotency"
   | "retry-backoff"
-  | "consensus";
+  | "consensus"
+  | "cloud-vs-onprem"
+  | "serverless"
+  | "iam-policy"
+  | "container"
+  | "compose"
+  | "ci-cd"
+  | "kubernetes"
+  | "observability";
 
 export type ContentBlock =
   | { type: "para"; text: string }
