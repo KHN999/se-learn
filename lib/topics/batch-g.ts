@@ -7,14 +7,24 @@ export const batchG: TopicContent[] = [
       "Why writing more code to check your code is faster than testing by hand.",
     problem:
       "You fix a bug in the checkout flow, ship it, and two days later discover the fix broke the discount code that used to work. Nobody touched the discount code — but nobody re-checked it either. Every change to a growing codebase can silently break something far away, and clicking through the whole app by hand after each change stops being possible once it's more than a few screens. How do you know a change didn't break anything?",
+    demo: "regression-catch",
     how: [
       {
         type: "para",
         text: "A test is code that runs your code and checks the result against what you expected. Because it's code, it runs in seconds and can be re-run on every change — so instead of re-checking everything by hand, you let the machine do it. When a test that used to pass starts failing, you've caught a regression before your users did.",
       },
       {
+        type: "code",
+        code: '// The discount code nobody touched\ntest("100% off makes the order free", () => {\n  expect(applyDiscount(50, 1.0)).toBe(0);\n});\n\n// After an unrelated checkout refactor, this turns red:\n//   Expected: 0   Received: 50   ← the discount silently stopped applying',
+        caption: "A passing test that turns red after an unrelated change is a regression caught automatically.",
+      },
+      {
         type: "para",
         text: "The real payoff isn't proving code works the day you write it — it's the safety net that lets you change it later. A codebase with good tests is one you can refactor and extend with confidence; one without becomes something everyone is afraid to touch.",
+      },
+      {
+        type: "demo",
+        demo: "regression-catch",
       },
       {
         type: "note",
@@ -62,6 +72,7 @@ export const batchG: TopicContent[] = [
       "Testing one small piece of code in isolation, fast enough to run on every save.",
     problem:
       "A price-calculation function is buried three layers deep in your app. To check whether it handles a 100% discount correctly, you'd have to spin up the server, log in, add items to a cart, and click through to checkout — a minute of setup to test one line of logic. And if it's wrong, you still don't know if the bug is in the calculation or somewhere along that path. How do you test just that function, directly?",
+    demo: "test-runner",
     how: [
       {
         type: "para",
@@ -72,6 +83,11 @@ export const batchG: TopicContent[] = [
         text: "The classic shape is arrange-act-assert: set up the inputs, call the code, check the result. When a unit test fails, it points almost exactly at the broken function, because nothing else was involved.",
       },
       {
+        type: "code",
+        code: '// price.test.js — one function, no server, no database\nimport { finalPrice } from "./price";\n\ntest("applies a 100% discount", () => {\n  const result = finalPrice({ amount: 50, discount: 1.0 }); // arrange + act\n  expect(result).toBe(0);                                    // assert\n});\n\ntest("rejects a negative discount", () => {\n  expect(() => finalPrice({ amount: 50, discount: -0.2 })).toThrow();\n});',
+        caption: "Arrange, act, assert — one unit, specific inputs, an exact expected output.",
+      },
+      {
         type: "points",
         items: [
           "Test one thing per test, so a failure names the problem precisely.",
@@ -79,6 +95,10 @@ export const batchG: TopicContent[] = [
           "No external dependencies — if the code needs a database or API, that dependency is stubbed or mocked out.",
           "Fast by design: a whole suite of thousands should finish in seconds.",
         ],
+      },
+      {
+        type: "demo",
+        demo: "test-runner",
       },
     ],
     tradeoffs: {
@@ -122,14 +142,24 @@ export const batchG: TopicContent[] = [
       "Checking that separately-working pieces actually work together.",
     problem:
       "Your order service passes all its unit tests. Your payment client passes all of its. But in production, orders fail — the payment client sends amounts in dollars and the payment API expects cents. Each unit was correct in isolation; the bug lives in the gap between them, exactly where no unit test looks. How do you catch failures at the seams?",
+    demo: "test-pyramid",
     how: [
       {
         type: "para",
         text: "An integration test exercises several units together, often including real external systems like a database, a cache, or another service. Instead of stubbing the database, you run the query against a real (usually disposable) one and check the rows that come back. It verifies the wiring: the data formats, the SQL, the API contracts, the assumptions each piece makes about the others.",
       },
       {
+        type: "code",
+        code: '// Runs against a real, throwaway Postgres — not a mock\ntest("saveOrder stores the amount in cents", async () => {\n  const db = await startTestDb();          // disposable container\n  await saveOrder(db, { totalDollars: 19.99 });\n\n  const row = await db.query("SELECT amount_cents FROM orders");\n  expect(row.amount_cents).toBe(1999);     // the dollars-vs-cents seam\n});',
+        caption: "Hitting a real (disposable) database is what surfaces the dollars-vs-cents mismatch between two units.",
+      },
+      {
         type: "para",
         text: "These sit in the middle of the test pyramid — slower and fewer than unit tests, because they involve real I/O, but far more realistic. A common setup spins up a throwaway database in a container, seeds it, runs the code path, and asserts on the actual result.",
+      },
+      {
+        type: "demo",
+        demo: "test-pyramid",
       },
       {
         type: "note",
@@ -177,10 +207,16 @@ export const batchG: TopicContent[] = [
       "Driving the whole running system like a real user, front door to database.",
     problem:
       "Every service passes its own tests, but the signup flow is still broken: the frontend posts to the wrong URL after a route change, and no lower-level test noticed because each piece was tested in isolation. The only thing that would have caught it is actually filling in the form and clicking 'Sign up' in a real browser. How do you test the system the way a user experiences it?",
+    demo: "e2e-flow",
     how: [
       {
         type: "para",
         text: "An end-to-end (E2E) test drives the fully assembled, running system from the outside — a real browser clicking buttons and typing into forms, or a client hitting the live API — and checks the user-visible outcome. It goes through every layer: UI, network, backend, database. If a user can do it, an E2E test can do it too.",
+      },
+      {
+        type: "code",
+        code: '// Playwright drives a real browser, front door to database\ntest("a new user can sign up", async ({ page }) => {\n  await page.goto("/signup");\n  await page.fill("#email", "sam@example.com");\n  await page.fill("#password", "hunter2");\n  await page.click("text=Sign up");\n\n  await expect(page.getByText("Welcome, Sam")).toBeVisible();\n});',
+        caption: "A real browser fills the form and clicks — the only test that catches a broken post-signup URL.",
       },
       {
         type: "para",
@@ -194,6 +230,10 @@ export const batchG: TopicContent[] = [
           "Test against a full deployment, so environment and config bugs surface too.",
           "Prone to flakiness from timing and animations; needs careful waiting logic.",
         ],
+      },
+      {
+        type: "demo",
+        demo: "e2e-flow",
       },
     ],
     tradeoffs: {
@@ -236,14 +276,24 @@ export const batchG: TopicContent[] = [
       "Replacing a real dependency with a fake one you fully control, so you can test in isolation.",
     problem:
       "You want to test the code that emails a receipt after a purchase. Running it for real would send an actual email to a real inbox every test run, cost money, and fail whenever the mail server is down — none of which has anything to do with whether your code is correct. And how do you test the 'what if the mail server returns an error?' path without breaking a real one? You need a stand-in.",
+    demo: "mocking",
     how: [
       {
         type: "para",
         text: "A mock is a fake version of a dependency that you substitute in during a test. Instead of calling the real email service, database, or payment API, your code calls the mock — which returns whatever you tell it to and records how it was called. This lets you test one unit without dragging its whole dependency chain along.",
       },
       {
+        type: "code",
+        code: '// Replace the real mail server with a controllable stand-in\nconst mailer = { send: jest.fn() };\n\ntest("sends a receipt after purchase", () => {\n  checkout({ total: 50 }, mailer);\n  expect(mailer.send).toHaveBeenCalledWith(\n    expect.objectContaining({ subject: "Your receipt" })\n  );\n});\n\n// Force the error path that is hard to trigger for real:\nmailer.send.mockRejectedValue(new Error("mail server down"));',
+        caption: "The mock stands in for the real mail server — no email sent, and you can force the failure path on demand.",
+      },
+      {
         type: "para",
         text: "Mocks serve two jobs: standing in for slow or unavailable systems, and letting you force specific scenarios — an API timeout, a 500 error, an empty result — that are hard to trigger for real. 'Mock', 'stub', and 'fake' are used loosely; the shared idea is a controllable replacement.",
+      },
+      {
+        type: "demo",
+        demo: "mocking",
       },
       {
         type: "note",
@@ -291,6 +341,7 @@ export const batchG: TopicContent[] = [
       "The fraction of your code that runs when the tests run — and why 100% isn't the goal.",
     problem:
       "A team proudly reports 95% test coverage, then ships a bug in a payment edge case. The line that broke was 'covered' — a test executed it — but no test ever checked that its output was correct for a negative amount. Coverage counted the line as tested when nothing actually verified it. So what is coverage really telling you?",
+    demo: "coverage",
     how: [
       {
         type: "para",
@@ -301,6 +352,11 @@ export const batchG: TopicContent[] = [
         text: "The trap is treating high coverage as high quality. Coverage only measures that a line ran, not that anything asserted the result was correct. You can execute every line and check nothing. So coverage is a useful floor ('this whole module is untested') but a misleading ceiling ('we're at 90%, we're safe').",
       },
       {
+        type: "code",
+        code: 'function refund(amount) {\n  if (amount < 0) return 0;   // ← this line runs, so it counts as "covered"\n  return amount;\n}\n\ntest("refund returns the amount", () => {\n  refund(-5);                 // executes the guard → 100% line coverage\n  expect(refund(50)).toBe(50);\n});\n// Coverage: 100%. Bug: nobody asserted refund(-5) === 0.',
+        caption: "Every line executed, so coverage reads 100% — yet nothing verified the negative-amount result.",
+      },
+      {
         type: "points",
         items: [
           "Line coverage: which lines ran. Branch coverage: which if/else paths ran (stricter, more useful).",
@@ -308,6 +364,10 @@ export const batchG: TopicContent[] = [
           "Chasing 100% wastes effort on trivial code and rewards assertion-free tests.",
           "A sensible target is a team norm, not a universal magic number.",
         ],
+      },
+      {
+        type: "demo",
+        demo: "coverage",
       },
     ],
     tradeoffs: {
@@ -351,6 +411,7 @@ export const batchG: TopicContent[] = [
       "The breadcrumbs a program leaves so you can reconstruct what happened after it's gone.",
     problem:
       "At 3am a request failed in production. You can't attach a debugger — the moment has passed and you can't reproduce it. All you have is what the program wrote down as it ran. If it recorded nothing, the failure is a mystery you may never solve. What should it have written, and how do you read it?",
+    demo: "stack-trace",
     how: [
       {
         type: "para",
@@ -361,6 +422,11 @@ export const batchG: TopicContent[] = [
         text: "Reading a stack trace is a skill: the top frame is usually where the error was raised, and you read downward (or upward, depending on language) through the callers to find the one in your code. Logs use severity levels so you can filter — DEBUG for detail while developing, ERROR for things that need attention in production.",
       },
       {
+        type: "code",
+        code: "TypeError: Cannot read properties of undefined (reading 'total')\n    at formatReceipt (checkout.js:42:18)   ← first frame in YOUR code — start here\n    at processOrder  (checkout.js:17:5)\n    at handleRequest (server.js:88:12)\n    at node_modules/express/lib/router.js:281:10   ← library frames, read past them",
+        caption: "Read down to the first frame in your own code — checkout.js:42 — and start debugging there.",
+      },
+      {
         type: "points",
         items: [
           "Levels: DEBUG, INFO, WARN, ERROR — filter noise from what matters.",
@@ -368,6 +434,10 @@ export const batchG: TopicContent[] = [
           "Include context: a request ID, user ID, timestamp — enough to correlate events.",
           "A stack trace names the failing line and the path of calls that reached it.",
         ],
+      },
+      {
+        type: "demo",
+        demo: "stack-trace",
       },
       {
         type: "note",
@@ -415,6 +485,7 @@ export const batchG: TopicContent[] = [
       "Pausing a program to inspect it, and measuring where it actually spends its time.",
     problem:
       "A function returns the wrong value and staring at the code hasn't revealed why. You could scatter print statements everywhere, re-run, read the output, add more, and repeat — a slow guessing game. Separately, a page is slow but you have no idea which of its fifty function calls is the culprit; optimizing the wrong one wastes a day. There are better tools for both.",
+    demo: "profiler",
     how: [
       {
         type: "para",
@@ -425,6 +496,11 @@ export const batchG: TopicContent[] = [
         text: "A profiler answers a different question: where does the time (or memory) go? It runs your program and measures how long each function takes and how often it's called, so you optimize the part that actually dominates. The rule is measure first — intuition about what's slow is famously wrong, and optimizing a function that takes 1% of the time is wasted effort.",
       },
       {
+        type: "code",
+        code: '// Profiler output: where an 800ms render actually went\nrender()            810ms  total\n  parseMarkdown()   740ms   ← 91% of the time — the real bottleneck\n  formatDate()        3ms   ← the "obvious" suspect; optimizing it saves nothing\n  sortItems()         2ms\n\n// Measure first, then fix the one line that dominates.',
+        caption: "The profiler shows 91% of the time in one call — measure before you optimize, do not guess.",
+      },
+      {
         type: "points",
         items: [
           "Breakpoint: pause at a line and inspect live variables and the call stack.",
@@ -432,6 +508,10 @@ export const batchG: TopicContent[] = [
           "Conditional breakpoints pause only when a condition is true — great for 'it fails on the 900th item'.",
           "Profilers produce flame graphs or hot-spot lists showing where time is spent.",
         ],
+      },
+      {
+        type: "demo",
+        demo: "profiler",
       },
       {
         type: "note",

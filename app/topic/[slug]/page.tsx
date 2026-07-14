@@ -94,6 +94,14 @@ import BrokenAuthDemo from "@/components/demos/BrokenAuthDemo";
 import InputValidationDemo from "@/components/demos/InputValidationDemo";
 import EncryptionDemo from "@/components/demos/EncryptionDemo";
 import RateLimitDemo from "@/components/demos/RateLimitDemo";
+import RegressionDemo from "@/components/demos/RegressionDemo";
+import TestRunnerDemo from "@/components/demos/TestRunnerDemo";
+import TestPyramidDemo from "@/components/demos/TestPyramidDemo";
+import E2eDemo from "@/components/demos/E2eDemo";
+import MockingDemo from "@/components/demos/MockingDemo";
+import CoverageDemo from "@/components/demos/CoverageDemo";
+import StackTraceDemo from "@/components/demos/StackTraceDemo";
+import ProfilerDemo from "@/components/demos/ProfilerDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -285,6 +293,14 @@ const DEMOS = {
   "allowlist": (c: string) => <InputValidationDemo color={c} />,
   "sym-asym": (c: string) => <EncryptionDemo color={c} />,
   "token-bucket": (c: string) => <RateLimitDemo color={c} />,
+  "regression-catch": (c: string) => <RegressionDemo color={c} />,
+  "test-runner": (c: string) => <TestRunnerDemo color={c} />,
+  "test-pyramid": (c: string) => <TestPyramidDemo color={c} />,
+  "e2e-flow": (c: string) => <E2eDemo color={c} />,
+  "mocking": (c: string) => <MockingDemo color={c} />,
+  "coverage": (c: string) => <CoverageDemo color={c} />,
+  "stack-trace": (c: string) => <StackTraceDemo color={c} />,
+  "profiler": (c: string) => <ProfilerDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {

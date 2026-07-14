@@ -94,7 +94,15 @@ export type DemoId =
   | "login-attack"
   | "allowlist"
   | "sym-asym"
-  | "token-bucket";
+  | "token-bucket"
+  | "regression-catch"
+  | "test-runner"
+  | "test-pyramid"
+  | "e2e-flow"
+  | "mocking"
+  | "coverage"
+  | "stack-trace"
+  | "profiler";
 
 export type ContentBlock =
   | { type: "para"; text: string }

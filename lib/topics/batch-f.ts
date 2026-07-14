@@ -739,6 +739,15 @@ export const batchF: TopicContent[] = [
         text: "'Broken authentication' covers the whole cluster of failures in verifying identity and keeping sessions safe. There's no single fix — it's a set of practices that together make impersonation hard, from the password itself through the session lifecycle to recovery flows.",
       },
       {
+        type: "code",
+        code: "// hardened login: slow to guess, uniform on failure, second factor\nif (await tooManyAttempts(ip, email)) return res.status(429).end();  // rate limit\nconst user = await db.findByEmail(email);\nconst ok = user && await bcrypt.compare(password, user.hash);        // slow salted hash\nif (!ok) return res.status(401).send(\"Invalid email or password\");   // don't reveal which\nif (user.mfaEnabled) return startMfaChallenge(user);                 // MFA beats stolen pw\nrotateSessionId(req);   // fresh random id on login; invalidate it on logout",
+        caption: "Rate limits, slow hashing, a generic error, MFA, and session rotation each close a different account-takeover route.",
+      },
+      {
+        type: "demo",
+        demo: "login-attack",
+      },
+      {
         type: "points",
         items: [
           "Store passwords with slow, salted hashing; enforce reasonable strength and check against known-breached lists.",
@@ -801,6 +810,15 @@ export const batchF: TopicContent[] = [
       {
         type: "para",
         text: "Input validation means checking, at your system's boundary, that incoming data matches what you actually expect — type, range, length, format — and rejecting what doesn't. The strongest form is allowlisting: define what's valid and refuse everything else, rather than trying to enumerate every bad case.",
+      },
+      {
+        type: "code",
+        code: "// validate at the boundary: define what's VALID, reject everything else\nif (!Number.isInteger(qty) || qty < 1 || qty > 100) reject(\"bad quantity\");\nif (!/^[a-z0-9_]{3,20}$/.test(username)) reject(\"bad username\");  // allowlist pattern\nif (!ALLOWED_ROLES.has(role)) reject(\"unknown role\");\n\n// validation is a FILTER, not a substitute — still parameterize + encode:\ndb.query(\"... WHERE name = ?\", [username]);   // and encode on output",
+        caption: "Allowlist what's permitted at the edge, but keep parameterizing queries and encoding output — they're complementary layers.",
+      },
+      {
+        type: "demo",
+        demo: "allowlist",
       },
       {
         type: "points",
@@ -875,6 +893,15 @@ export const batchF: TopicContent[] = [
         ],
       },
       {
+        type: "code",
+        code: "// SYMMETRIC (AES) — one shared key both encrypts AND decrypts (fast, bulk data)\nconst ct = aesEncrypt(plaintext, sharedKey);\nconst pt = aesDecrypt(ct, sharedKey);        // same key both ways\n\n// ASYMMETRIC (RSA/ECC) — public key encrypts, private key decrypts\nconst ct2 = rsaEncrypt(plaintext, publicKey);\nconst pt2 = rsaDecrypt(ct2, privateKey);     // only the private key opens it\n// TLS combines both: asymmetric to share a key, then symmetric for the data",
+        caption: "Symmetric reuses one shared key for speed; asymmetric uses a public/private pair to solve key exchange — TLS uses both.",
+      },
+      {
+        type: "demo",
+        demo: "sym-asym",
+      },
+      {
         type: "note",
         text: "Never invent your own cryptography. Use vetted libraries and standard algorithms with correct modes, and treat key management — generation, storage, rotation — as the hard part, because a leaked key makes the strongest cipher pointless.",
       },
@@ -923,6 +950,15 @@ export const batchF: TopicContent[] = [
       {
         type: "para",
         text: "Rate limiting sets a ceiling on how many requests a client may make in a time window, then rejects or delays the excess (typically with HTTP 429 Too Many Requests). As a security control, it turns cheap, high-volume attacks — brute force, credential stuffing, scraping — into slow, expensive ones that are far easier to detect and block.",
+      },
+      {
+        type: "code",
+        code: "// token bucket: refill N tokens per window; each request spends one\nif (!bucket.take(key)) {                 // key = user, API key, or IP\n  res.setHeader(\"Retry-After\", \"60\");\n  return res.status(429).send(\"Too Many Requests\");\n}\n// tighter limits on sensitive routes (login, reset); pair with lockout/backoff\n// one layer only — it slows brute force, it can't fix weak passwords or add MFA",
+        caption: "A per-client bucket caps request rate and returns 429 when empty, turning cheap high-volume attacks into slow, detectable ones.",
+      },
+      {
+        type: "demo",
+        demo: "token-bucket",
       },
       {
         type: "points",
