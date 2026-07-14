@@ -80,7 +80,12 @@ export type DemoId =
   | "refactor-dry"
   | "coupling"
   | "solid"
-  | "design-patterns";
+  | "design-patterns"
+  | "authn-authz"
+  | "session-store"
+  | "jwt-decode"
+  | "oauth-flow"
+  | "password-hash";
 
 export type ContentBlock =
   | { type: "para"; text: string }

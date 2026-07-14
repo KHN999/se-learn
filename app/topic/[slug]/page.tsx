@@ -80,6 +80,11 @@ import OopPillarsDemo from "@/components/demos/OopPillarsDemo";
 import CouplingDemo from "@/components/demos/CouplingDemo";
 import SolidDemo from "@/components/demos/SolidDemo";
 import DesignPatternsDemo from "@/components/demos/DesignPatternsDemo";
+import AuthzDemo from "@/components/demos/AuthzDemo";
+import SessionDemo from "@/components/demos/SessionDemo";
+import JwtDemo from "@/components/demos/JwtDemo";
+import OAuthFlowDemo from "@/components/demos/OAuthFlowDemo";
+import PasswordHashDemo from "@/components/demos/PasswordHashDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -257,6 +262,11 @@ const DEMOS = {
   "coupling": (c: string) => <CouplingDemo color={c} />,
   "solid": (c: string) => <SolidDemo color={c} />,
   "design-patterns": (c: string) => <DesignPatternsDemo color={c} />,
+  "authn-authz": (c: string) => <AuthzDemo color={c} />,
+  "session-store": (c: string) => <SessionDemo color={c} />,
+  "jwt-decode": (c: string) => <JwtDemo color={c} />,
+  "oauth-flow": (c: string) => <OAuthFlowDemo color={c} />,
+  "password-hash": (c: string) => <PasswordHashDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {

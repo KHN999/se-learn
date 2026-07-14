@@ -7,10 +7,20 @@ export const batchF: TopicContent[] = [
       "The difference between proving who you are and being allowed to do a thing.",
     problem:
       "A logged-in user changes the id in the URL from their own to someone else's and suddenly sees another person's invoices. The system correctly checked that they were signed in — but never checked whether they were allowed to see that particular record. Confusing 'who are you?' with 'what may you do?' is behind a huge share of real breaches.",
+    demo: "authn-authz",
     how: [
       {
         type: "para",
         text: "Authentication (authn) establishes identity: it answers 'who is this?' by verifying something the user knows, has, or is — a password, a one-time code, a device. Authorization (authz) happens after, and decides 'is this identity allowed to perform this action on this resource?'. They are separate steps, and both must pass.",
+      },
+      {
+        type: "code",
+        code: "// 1. Authentication — who is this? (401 if we can't tell)\nif (!req.user) return res.status(401).send(\"Not logged in\");\n\n// 2. Authorization — may THIS user touch THIS record? (403 if not)\nconst invoice = await db.getInvoice(req.params.id);\nif (invoice.ownerId !== req.user.id) return res.status(403).send(\"Forbidden\");\n// passing step 1 never implies step 2 — check ownership on every request",
+        caption: "401 means we don't know you; 403 means we know you but you may not. Both checks must run.",
+      },
+      {
+        type: "demo",
+        demo: "authn-authz",
       },
       {
         type: "points",
@@ -65,6 +75,7 @@ export const batchF: TopicContent[] = [
       "How a website remembers you're logged in across stateless HTTP requests.",
     problem:
       "You log in once, then click around ten pages without re-entering your password. But HTTP is stateless — the server treats each request as if it had never seen you before. Something has to carry proof of your login from one request to the next, without letting an attacker forge or steal that proof. How does the site remember you?",
+    demo: "session-store",
     how: [
       {
         type: "para",
@@ -73,6 +84,15 @@ export const batchF: TopicContent[] = [
       {
         type: "para",
         text: "The session id must be long, random, and unguessable, because whoever holds it is treated as you. The server stores the real session data (server-side sessions); the cookie holds only the opaque id. Cookies carry flags that control their safety.",
+      },
+      {
+        type: "code",
+        code: "// login: create a server-side session, hand back only an opaque id\nconst sid = crypto.randomBytes(32).toString(\"hex\");\nawait store.set(sid, { userId: user.id });   // real data stays server-side\nres.cookie(\"sid\", sid, { httpOnly: true, secure: true, sameSite: \"lax\" });\n\n// later request: the browser auto-sends the cookie; server looks it up\nconst session = await store.get(req.cookies.sid);   // → { userId } or null",
+        caption: "The cookie carries only an opaque id; the real session state lives in a server-side store.",
+      },
+      {
+        type: "demo",
+        demo: "session-store",
       },
       {
         type: "points",
@@ -131,6 +151,7 @@ export const batchF: TopicContent[] = [
       "A signed token that carries a user's identity so the server doesn't have to look it up.",
     problem:
       "With server-side sessions, every request means a lookup in a shared session store, and scaling across many servers or services means they all share that store. What if the request could carry a tamper-proof proof of identity that any server can verify on its own, no database hit required? That's the promise — and the trap — of JWTs.",
+    demo: "jwt-decode",
     how: [
       {
         type: "para",
@@ -139,6 +160,15 @@ export const batchF: TopicContent[] = [
       {
         type: "para",
         text: "Crucially, a JWT is signed, not encrypted — the payload is only base64-encoded and fully readable by anyone. The signature stops tampering, not reading. Never put secrets in a JWT payload.",
+      },
+      {
+        type: "code",
+        code: "// header.payload.signature — three base64url parts joined by dots\neyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjMiLCJyb2xlIjoiYWRtaW4ifQ.k3Rf9s...\n\natob(\"eyJzdWIiOiIxMjMiLCJyb2xlIjoiYWRtaW4ifQ\")\n// → {\"sub\":\"123\",\"role\":\"admin\"}   ← anyone can READ this; it is NOT encrypted\n\nverify(token, SECRET)   // signature check — proves it wasn't tampered with",
+        caption: "The payload is base64url, readable by anyone; the signature only proves it hasn't been altered.",
+      },
+      {
+        type: "demo",
+        demo: "jwt-decode",
       },
       {
         type: "points",
@@ -197,6 +227,7 @@ export const batchF: TopicContent[] = [
       "Letting an app act on your behalf, or log you in, without ever seeing your password.",
     problem:
       "A calendar app wants to read your Google contacts. You could hand it your Google password — but then it has full access to everything forever, and you can't take it back without changing your password. You want to grant one app limited, revocable access to specific data, without sharing your credentials. That's the problem OAuth solves.",
+    demo: "oauth-flow",
     how: [
       {
         type: "para",
@@ -205,6 +236,15 @@ export const batchF: TopicContent[] = [
       {
         type: "para",
         text: "OAuth alone is about authorization (access to resources). OpenID Connect (OIDC) is a thin identity layer on top: it adds an id token (a signed JWT) that proves who you are, which is what powers 'Sign in with Google/Apple/GitHub'.",
+      },
+      {
+        type: "code",
+        code: "// 1. app sends you to the provider — it never sees your password\nGET accounts.google.com/o/oauth2/auth?client_id=APP&scope=contacts\n    &redirect_uri=https://app/cb&state=xyz&code_challenge=...   (PKCE)\n\n// 2. you approve → provider redirects back with a one-time code\nGET https://app/cb?code=AUTH_CODE&state=xyz\n\n// 3. app trades the code for tokens — server-to-server, with its secret\nPOST /token { code, client_secret, code_verifier } → { access_token, id_token }",
+        caption: "The browser only ever carries a short-lived code; tokens are fetched server-to-server. The id_token (OIDC) proves who you are.",
+      },
+      {
+        type: "demo",
+        demo: "oauth-flow",
       },
       {
         type: "points",
@@ -263,10 +303,20 @@ export const batchF: TopicContent[] = [
       "How to store passwords so a database breach doesn't hand over everyone's password.",
     problem:
       "You must check a user's password at login, but if you store passwords as plain text, a single database leak exposes every account — and people reuse passwords everywhere. How do you verify a password without ever keeping the password itself?",
+    demo: "password-hash",
     how: [
       {
         type: "para",
         text: "You store a one-way hash, not the password. A slow, salted hash function (bcrypt, argon2, scrypt) turns the password into a value you can't reverse. At login you hash the input the same way and compare against the stored hash — the original password is never kept anywhere.",
+      },
+      {
+        type: "code",
+        code: "// signup: store a slow, salted hash — never the password itself\nconst hash = await bcrypt.hash(password, 12);   // 12 = cost factor, slow on purpose\n// → $2b$12$K1x.../...   algorithm, cost, and a random salt are baked in\n\n// login: hash the attempt the same way and compare in constant time\nconst ok = await bcrypt.compare(attempt, hash);   // true / false\n// never md5(password) or sha256(password) — fast hashes guess far too cheaply",
+        caption: "bcrypt bakes the cost factor and a random salt into the stored string; compare re-hashes the attempt and checks it.",
+      },
+      {
+        type: "demo",
+        demo: "password-hash",
       },
       {
         type: "points",
