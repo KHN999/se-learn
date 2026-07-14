@@ -102,7 +102,13 @@ export type DemoId =
   | "mocking"
   | "coverage"
   | "stack-trace"
-  | "profiler";
+  | "profiler"
+  | "latency-throughput"
+  | "resource-bound"
+  | "cache-hit"
+  | "compression"
+  | "conn-pool"
+  | "n-plus-1";
 
 export type ContentBlock =
   | { type: "para"; text: string }

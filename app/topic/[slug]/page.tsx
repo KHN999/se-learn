@@ -102,6 +102,12 @@ import MockingDemo from "@/components/demos/MockingDemo";
 import CoverageDemo from "@/components/demos/CoverageDemo";
 import StackTraceDemo from "@/components/demos/StackTraceDemo";
 import ProfilerDemo from "@/components/demos/ProfilerDemo";
+import LatencyThroughputDemo from "@/components/demos/LatencyThroughputDemo";
+import ResourceBoundDemo from "@/components/demos/ResourceBoundDemo";
+import CacheDemo from "@/components/demos/CacheDemo";
+import CompressionDemo from "@/components/demos/CompressionDemo";
+import ConnPoolDemo from "@/components/demos/ConnPoolDemo";
+import NPlusOneDemo from "@/components/demos/NPlusOneDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -301,6 +307,12 @@ const DEMOS = {
   "coverage": (c: string) => <CoverageDemo color={c} />,
   "stack-trace": (c: string) => <StackTraceDemo color={c} />,
   "profiler": (c: string) => <ProfilerDemo color={c} />,
+  "latency-throughput": (c: string) => <LatencyThroughputDemo color={c} />,
+  "resource-bound": (c: string) => <ResourceBoundDemo color={c} />,
+  "cache-hit": (c: string) => <CacheDemo color={c} />,
+  "compression": (c: string) => <CompressionDemo color={c} />,
+  "conn-pool": (c: string) => <ConnPoolDemo color={c} />,
+  "n-plus-1": (c: string) => <NPlusOneDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {

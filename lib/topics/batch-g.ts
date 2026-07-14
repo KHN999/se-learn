@@ -559,6 +559,7 @@ export const batchG: TopicContent[] = [
       "How long one thing takes versus how many things you can do per second — and why they're different.",
     problem:
       "You add more servers to handle a traffic spike, and the system now serves far more requests per second — but each individual user's page still takes the same 800ms it always did, and they're not happier. You improved one thing and left the other untouched. These are two separate measures of speed, and confusing them leads to fixing the wrong one. Which does your problem actually need?",
+    demo: "latency-throughput",
     how: [
       {
         type: "para",
@@ -567,6 +568,15 @@ export const batchG: TopicContent[] = [
       {
         type: "para",
         text: "The classic analogy is a highway. Latency is how long your car takes to drive from A to B; throughput is how many cars pass a point per minute. Adding lanes raises throughput but doesn't make any one car faster. Raising the speed limit lowers latency for everyone.",
+      },
+      {
+        type: "code",
+        code: "// One worker, one request at a time: low latency, low throughput\nhandle(req)                      // ~20ms each  ->  ~50 req/s\n\n// Batch 100 requests, flush together: higher throughput, higher latency\nbatch.push(req)                  // each waits up to 50ms for the batch to fill\nif (batch.length === 100) flush(batch)   // 100 done in one ~30ms round trip\n// per-request latency: 20ms -> ~65ms     throughput: 50/s -> ~3000/s",
+        caption: "Batching pushes throughput far above the one-at-a-time path while raising each request's latency — proof the two move independently.",
+      },
+      {
+        type: "demo",
+        demo: "latency-throughput",
       },
       {
         type: "points",
@@ -622,6 +632,7 @@ export const batchG: TopicContent[] = [
       "The two finite resources every program competes for, and how running out of each fails differently.",
     problem:
       "Your service was fine yesterday and today it's crawling. Is it because the CPU is pegged at 100% doing too much computation, or because it's out of memory and constantly swapping to disk? These two look similar from the outside — 'slow' — but have opposite causes and opposite fixes. Guess wrong and you scale the wrong thing. How do you tell them apart?",
+    demo: "resource-bound",
     how: [
       {
         type: "para",
@@ -630,6 +641,15 @@ export const batchG: TopicContent[] = [
       {
         type: "para",
         text: "The two failure modes are distinct. CPU-bound work is limited by calculation — tight loops, parsing, encryption. Memory-bound work is limited by how much you're holding at once — loading a huge file entirely into RAM, or a leak that grows without bound until the process is killed (an out-of-memory kill).",
+      },
+      {
+        type: "code",
+        code: "# Memory-bound: pulls the whole 5 GB file into RAM at once -> risks an OOM kill\nrows = open(\"events.csv\").readlines()   # ~5 GB resident\nfor r in rows:\n    process(r)\n\n# Streaming fix: one line in memory at a time -> footprint stays flat\nfor r in open(\"events.csv\"):             # reads lazily, line by line\n    process(r)                           # RAM stays ~constant, any file size",
+        caption: "Same work, opposite memory profiles: buffering the whole file risks an OOM kill; streaming holds one line at a time so RAM stays flat.",
+      },
+      {
+        type: "demo",
+        demo: "resource-bound",
       },
       {
         type: "points",
@@ -686,6 +706,7 @@ export const batchG: TopicContent[] = [
       "Keeping the answer to expensive work nearby so you don't redo it every time.",
     problem:
       "Your homepage runs the same heavy database query for every visitor, and the data only changes a few times a day. Ten thousand visitors an hour means ten thousand identical expensive queries computing the same result. You're paying full price over and over for an answer that hasn't changed. Why recompute what you already know?",
+    demo: "cache-hit",
     how: [
       {
         type: "para",
@@ -694,6 +715,15 @@ export const batchG: TopicContent[] = [
       {
         type: "para",
         text: "The hard part isn't storing data — it's knowing when the stored copy is stale. If the underlying data changes but the cache still serves the old value, users see wrong information. So every cache needs an invalidation strategy: a time-to-live (TTL) that expires entries after a while, or explicit eviction when the source changes.",
+      },
+      {
+        type: "code",
+        code: "async function getUser(id) {\n  const key = `user:${id}`;\n  const hit = await cache.get(key);\n  if (hit) return JSON.parse(hit);            // cache hit: cheap, no DB\n\n  const user = await db.query(                // miss: pay the full cost\n    \"SELECT * FROM users WHERE id = $1\", [id]);\n  await cache.set(key, JSON.stringify(user), \"EX\", 300); // store, TTL 300s\n  return user;\n}",
+        caption: "Cache-aside: serve from the cache on a hit; on a miss, compute once and store with a TTL so stale entries expire on their own.",
+      },
+      {
+        type: "demo",
+        demo: "cache-hit",
       },
       {
         type: "points",
@@ -750,6 +780,7 @@ export const batchG: TopicContent[] = [
       "Trading a bit of CPU to make data smaller, so it moves and stores cheaper.",
     problem:
       "Your API returns a 2MB JSON payload on every page load. Over a mobile connection that's a slow, expensive download for the user and a lot of bandwidth for you — and JSON is mostly repetitive text with obvious patterns. Sending all those bytes as-is wastes the network on redundancy. Can you send fewer bytes without losing any of the data?",
+    demo: "compression",
     how: [
       {
         type: "para",
@@ -758,6 +789,15 @@ export const batchG: TopicContent[] = [
       {
         type: "para",
         text: "There are two families. Lossless compression (gzip, Brotli, zstd) reconstructs the original exactly — essential for text, code, and JSON. Lossy compression (JPEG, MP3, H.264) throws away detail humans barely notice to shrink far more — right for images, audio, and video, wrong for anything that must survive intact.",
+      },
+      {
+        type: "code",
+        code: "import { gzipSync } from \"zlib\";\n\nconst body = JSON.stringify(records);   // ~2.0 MB of repetitive JSON\nconst packed = gzipSync(body);          // a few ms of CPU to compress\n\nres.setHeader(\"Content-Encoding\", \"gzip\");\nres.end(packed);                        // ~180 KB on the wire (~91% smaller)",
+        caption: "Spend a few milliseconds of CPU to gzip a repetitive JSON payload and put ~91% fewer bytes on the wire.",
+      },
+      {
+        type: "demo",
+        demo: "compression",
       },
       {
         type: "points",
@@ -814,6 +854,7 @@ export const batchG: TopicContent[] = [
       "Reusing a set of already-open connections instead of opening a new one every time.",
     problem:
       "Every request to your app opens a fresh database connection, runs one quick query, and closes it. Opening that connection — TCP handshake, TLS negotiation, database authentication — takes longer than the query itself. Under load, thousands of requests open thousands of connections, and the database, which can only handle a few hundred at once, falls over. The connecting, not the querying, is killing you.",
+    demo: "conn-pool",
     how: [
       {
         type: "para",
@@ -822,6 +863,15 @@ export const batchG: TopicContent[] = [
       {
         type: "para",
         text: "The pool also acts as a throttle. It has a maximum size, so it caps how many connections hit the database at once — protecting it from being overwhelmed. If all connections are in use, new requests wait for one to free up rather than piling more load on the database.",
+      },
+      {
+        type: "code",
+        code: "import { Pool } from \"pg\";\n\n// Open a few connections once and reuse them for every request\nconst pool = new Pool({ max: 20 });     // cap: 20 concurrent connections\n\napp.get(\"/users/:id\", async (req, res) => {\n  // No TCP+TLS+auth handshake here: borrow an open connection, then auto-return it\n  const { rows } = await pool.query(\n    \"SELECT * FROM users WHERE id = $1\", [req.params.id]);\n  res.json(rows[0]);\n});",
+        caption: "The pool opens up to 20 connections once and lends them out, so each request skips the TCP+TLS+auth handshake instead of reconnecting.",
+      },
+      {
+        type: "demo",
+        demo: "conn-pool",
       },
       {
         type: "points",
@@ -878,10 +928,24 @@ export const batchG: TopicContent[] = [
       "Why a page issues hundreds of tiny queries when one would do.",
     problem:
       "You load 100 blog posts, then loop over them to fetch each author — that's 1 query for the posts plus 100 for the authors. The page felt fine with 5 posts in testing and crawls with 100 in production. Where did the queries come from?",
+    demo: "n-plus-1",
     how: [
       {
         type: "para",
         text: "The N+1 pattern is one query to get a list, then one more query per item in that list. It hides easily behind ORMs and lazy-loaded relationships, so the extra queries aren't visible in your code — accessing post.author quietly fires a query each time through the loop.",
+      },
+      {
+        type: "para",
+        text: "The fix is to fetch the related rows up front in a single round trip: either a JOIN that returns posts and their authors together, or one follow-up query that batches every lookup with WHERE id IN (...). ORMs expose this as eager loading — Rails' includes, Django's select_related and prefetch_related, GraphQL's DataLoader. One or two queries replace N+1, and the cost stops growing with the list.",
+      },
+      {
+        type: "code",
+        code: "// N+1: one query for the list, then one more per row\nconst posts = await db.query(\"SELECT * FROM posts LIMIT 100\");  // 1 query\nfor (const p of posts) {\n  p.author = await db.query(                                     // + 100 queries\n    \"SELECT * FROM users WHERE id = $1\", [p.author_id]);\n}\n\n// Fixed: one query for posts, one batched query for every author\nconst ids = posts.map((p) => p.author_id);\nconst authors = await db.query(                                 // 1 batched query\n  \"SELECT * FROM users WHERE id = ANY($1)\", [ids]);",
+        caption: "101 queries collapse to 2: fetch the list, then batch every related lookup into one IN query (a JOIN works too).",
+      },
+      {
+        type: "demo",
+        demo: "n-plus-1",
       },
       {
         type: "points",
