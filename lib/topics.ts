@@ -85,7 +85,16 @@ export type DemoId =
   | "session-store"
   | "jwt-decode"
   | "oauth-flow"
-  | "password-hash";
+  | "password-hash"
+  | "owasp"
+  | "sql-injection"
+  | "xss-escape"
+  | "csrf-attack"
+  | "ssrf-block"
+  | "login-attack"
+  | "allowlist"
+  | "sym-asym"
+  | "token-bucket";
 
 export type ContentBlock =
   | { type: "para"; text: string }

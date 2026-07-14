@@ -85,6 +85,15 @@ import SessionDemo from "@/components/demos/SessionDemo";
 import JwtDemo from "@/components/demos/JwtDemo";
 import OAuthFlowDemo from "@/components/demos/OAuthFlowDemo";
 import PasswordHashDemo from "@/components/demos/PasswordHashDemo";
+import OwaspDemo from "@/components/demos/OwaspDemo";
+import SqlInjectionDemo from "@/components/demos/SqlInjectionDemo";
+import XssDemo from "@/components/demos/XssDemo";
+import CsrfDemo from "@/components/demos/CsrfDemo";
+import SsrfDemo from "@/components/demos/SsrfDemo";
+import BrokenAuthDemo from "@/components/demos/BrokenAuthDemo";
+import InputValidationDemo from "@/components/demos/InputValidationDemo";
+import EncryptionDemo from "@/components/demos/EncryptionDemo";
+import RateLimitDemo from "@/components/demos/RateLimitDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -267,6 +276,15 @@ const DEMOS = {
   "jwt-decode": (c: string) => <JwtDemo color={c} />,
   "oauth-flow": (c: string) => <OAuthFlowDemo color={c} />,
   "password-hash": (c: string) => <PasswordHashDemo color={c} />,
+  "owasp": (c: string) => <OwaspDemo color={c} />,
+  "sql-injection": (c: string) => <SqlInjectionDemo color={c} />,
+  "xss-escape": (c: string) => <XssDemo color={c} />,
+  "csrf-attack": (c: string) => <CsrfDemo color={c} />,
+  "ssrf-block": (c: string) => <SsrfDemo color={c} />,
+  "login-attack": (c: string) => <BrokenAuthDemo color={c} />,
+  "allowlist": (c: string) => <InputValidationDemo color={c} />,
+  "sym-asym": (c: string) => <EncryptionDemo color={c} />,
+  "token-bucket": (c: string) => <RateLimitDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {

@@ -371,10 +371,20 @@ export const batchF: TopicContent[] = [
       "A widely used checklist of the most common, most damaging web security risks.",
     problem:
       "Security is enormous and a small team can't chase every possible flaw. Where do you even start, and how do you know you're covering the risks that actually get exploited rather than exotic ones that don't? You need a prioritized, evidence-based list of what goes wrong most often. That's what the OWASP Top 10 provides.",
+    demo: "owasp",
     how: [
       {
         type: "para",
         text: "The OWASP Top 10 is a periodically updated, community-driven list of the most critical web application security risks, ranked by real-world prevalence and impact. It's not a standard to certify against — it's a baseline awareness document and starting checklist for developers and reviewers.",
+      },
+      {
+        type: "code",
+        code: "// OWASP Top 10 — each prevalent risk paired with its one-line defense\n// A01 Broken access control  → verify ownership on every request\n// A02 Cryptographic failures → TLS in transit; hash/encrypt at rest\n// A03 Injection (SQLi, XSS)  → parameterize queries; encode output\n// A05 Security misconfig     → harden defaults; patch dependencies\n// A07 Auth failures          → MFA; rate limits; strong session ids\n// use it to prioritize — passing it is a floor, not proof you're secure",
+        caption: "The list pairs each common, high-impact risk with a concrete defense — a prioritized starting checklist, not a certification.",
+      },
+      {
+        type: "demo",
+        demo: "owasp",
       },
       {
         type: "points",
@@ -434,10 +444,20 @@ export const batchF: TopicContent[] = [
       "When user input is glued into a query as code, letting attackers rewrite it.",
     problem:
       "Your login checks a query built like \"SELECT * FROM users WHERE name = '\" + input + \"'\". A user types their name as ' OR '1'='1 and the query now matches every row — they're logged in as someone else, or worse, they append a command that dumps or deletes the whole table. Any time input is concatenated into SQL, the input can become code.",
+    demo: "sql-injection",
     how: [
       {
         type: "para",
         text: "SQL injection happens when data and code share the same channel: the database can't tell your intended query from the attacker's injected fragment because they arrived as one string. The fix is to keep them separate — send the query and the data on different tracks so input is always treated as a value, never as SQL.",
+      },
+      {
+        type: "code",
+        code: "// VULNERABLE — input is glued into the query text and becomes code\ndb.query(\"SELECT * FROM users WHERE name = '\" + name + \"'\");\n// name = \"' OR '1'='1\"  →  the WHERE clause now matches every row\n\n// SAFE — parameterized: ? is a value slot the input can never escape\ndb.query(\"SELECT * FROM users WHERE name = ?\", [name]);\n// the driver sends query and data separately, so input stays data",
+        caption: "A placeholder keeps data on a separate track from the query text, so input can never rewrite the statement's structure.",
+      },
+      {
+        type: "demo",
+        demo: "sql-injection",
       },
       {
         type: "points",
@@ -496,10 +516,20 @@ export const batchF: TopicContent[] = [
       "When a site renders attacker-supplied input as live code in another user's browser.",
     problem:
       "A comment box lets users post text, and you show comments to everyone. An attacker posts <script>steal(document.cookie)</script> as their comment. Now every visitor who views that page runs the attacker's JavaScript in their own session — reading their cookies, acting as them, or redirecting them. The page treated attacker data as code.",
+    demo: "xss-escape",
     how: [
       {
         type: "para",
         text: "Cross-site scripting (XSS) is injection in the browser: untrusted input is written into a page without being neutralized, so the browser executes it as HTML or JavaScript. The defense is contextual output encoding — when you place data into a page, encode it for that spot so it renders as inert text, not markup.",
+      },
+      {
+        type: "code",
+        code: "// VULNERABLE — the comment is parsed as HTML, so the script runs\nel.innerHTML = comment;   // <script>steal(document.cookie)</script> executes\n\n// SAFE — insert as text; the browser shows the characters, runs nothing\nel.textContent = comment;\n// when you must build markup, encode for the exact context (HTML/attr/URL/JS)\n// defense-in-depth: Content-Security-Policy: script-src 'self'",
+        caption: "Rendering input as text (or context-aware encoding) makes markup inert; a CSP limits any script that still slips through.",
+      },
+      {
+        type: "demo",
+        demo: "xss-escape",
       },
       {
         type: "points",
@@ -558,10 +588,20 @@ export const batchF: TopicContent[] = [
       "Tricking a logged-in user's browser into making a request they never intended.",
     problem:
       "You're logged into your bank in one tab. In another tab you open a malicious page that quietly submits a hidden form to transfer money from your account. Because your browser attaches your bank session cookie to every request to that domain automatically, the bank sees a fully authenticated request — and processes the transfer. You never clicked anything meaningful.",
+    demo: "csrf-attack",
     how: [
       {
         type: "para",
         text: "Cross-site request forgery (CSRF) abuses the fact that browsers send cookies automatically. The attacker's site can't read your bank's responses, but it can cause your browser to send an authenticated request. The defense is to require proof that the request came from your own site, not a forged cross-site one.",
+      },
+      {
+        type: "code",
+        code: "// the attacker's page auto-submits this; your bank cookie rides along\n<form action=\"https://bank.com/transfer\" method=\"POST\">\n  <input name=\"to\" value=\"attacker\"><input name=\"amt\" value=\"1000\">\n</form>   // the bank sees a fully authenticated request\n\n// DEFENSE: SameSite withholds the cookie cross-site + a token they can't read\nSet-Cookie: sid=abc; SameSite=Lax; Secure; HttpOnly\n<input type=\"hidden\" name=\"_csrf\" value=\"<per-session-token>\">",
+        caption: "SameSite keeps the session cookie off cross-site requests; the anti-CSRF token proves the request came from your own page.",
+      },
+      {
+        type: "demo",
+        demo: "csrf-attack",
       },
       {
         type: "points",
@@ -620,10 +660,20 @@ export const batchF: TopicContent[] = [
       "Tricking a server into making requests to places the attacker can't reach directly.",
     problem:
       "Your app has a feature that fetches a URL the user provides — say, to generate a link preview or import an image. An attacker gives it http://169.254.169.254/ or http://localhost/admin. Your server, sitting inside a trusted network, happily fetches internal services, cloud metadata endpoints, and databases the attacker could never reach from outside — and hands back the results.",
+    demo: "ssrf-block",
     how: [
       {
         type: "para",
         text: "Server-side request forgery (SSRF) turns your server into a proxy: because it's trusted inside the network, requests it makes on the attacker's behalf can reach internal-only resources. The defense is to strictly control what outbound requests the server is allowed to make from user input.",
+      },
+      {
+        type: "code",
+        code: "// user supplies a URL to fetch (link preview, image import)\nconst url = new URL(userInput);\nif (!ALLOWED_HOSTS.has(url.hostname)) throw new Error(\"host not allowed\");\n\n// resolve first, then reject private + cloud-metadata addresses\nconst ip = await dns.resolve(url.hostname);\nif (isPrivate(ip) || ip === \"169.254.169.254\") throw new Error(\"blocked\");\nawait fetch(url, { redirect: \"manual\" });   // re-check the IP after each redirect",
+        caption: "Allowlist the host, resolve and reject internal/metadata IPs, and re-validate after every redirect to defeat DNS rebinding.",
+      },
+      {
+        type: "demo",
+        demo: "ssrf-block",
       },
       {
         type: "points",
@@ -682,6 +732,7 @@ export const batchF: TopicContent[] = [
       "The many ways a login and session system fails and lets attackers in as someone else.",
     problem:
       "An attacker doesn't need to break your encryption if they can just log in as your users. They try leaked passwords across your login (credential stuffing), guess weak ones at high speed, reuse a session id that never expired, or reset a password through a sloppy 'forgot password' flow. Any weakness in how you prove and maintain identity is a direct route to account takeover.",
+    demo: "login-attack",
     how: [
       {
         type: "para",
@@ -745,6 +796,7 @@ export const batchF: TopicContent[] = [
       "Treating everything from outside your system as hostile until proven safe.",
     problem:
       "Your code assumes the age field is a small positive number, the file upload is really an image, and the quantity in an order is at least one. Then a request arrives with age = -1, a script disguised as an image, and quantity = -5 that credits the attacker money. Every input from a client, another service, or a file is a chance for someone to feed you something you never expected.",
+    demo: "allowlist",
     how: [
       {
         type: "para",
@@ -807,6 +859,7 @@ export const batchF: TopicContent[] = [
       "Scrambling data so only someone with the key can read it.",
     problem:
       "Data travels across networks you don't control and sits on disks that can be stolen or seized. If it's stored and sent as plain readable text, anyone who intercepts the traffic or grabs the drive reads everything — passwords in transit, customer records at rest. How do you make data useless to whoever gets their hands on it, yet readable to the intended party?",
+    demo: "sym-asym",
     how: [
       {
         type: "para",
@@ -865,6 +918,7 @@ export const batchF: TopicContent[] = [
       "Capping how often a client can act, to blunt abuse and protect resources.",
     problem:
       "An attacker points a script at your login endpoint and tries thousands of passwords a second, or hammers your 'send verification email' route to spam users and run up your bill, or floods an expensive API until it falls over for everyone. Without a cap on how fast a single client can act, one abuser can guess credentials, exhaust resources, or take the service down.",
+    demo: "token-bucket",
     how: [
       {
         type: "para",
