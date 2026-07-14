@@ -75,6 +75,11 @@ import ArchStylesDemo from "@/components/demos/ArchStylesDemo";
 import ApiGatewayDemo from "@/components/demos/ApiGatewayDemo";
 import LoadBalanceDemo from "@/components/demos/LoadBalanceDemo";
 import ServiceDiscoveryDemo from "@/components/demos/ServiceDiscoveryDemo";
+import RefactorDemo from "@/components/demos/RefactorDemo";
+import OopPillarsDemo from "@/components/demos/OopPillarsDemo";
+import CouplingDemo from "@/components/demos/CouplingDemo";
+import SolidDemo from "@/components/demos/SolidDemo";
+import DesignPatternsDemo from "@/components/demos/DesignPatternsDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -245,6 +250,13 @@ const DEMOS = {
   "api-gateway": (c: string) => <ApiGatewayDemo color={c} />,
   "load-balance": (c: string) => <LoadBalanceDemo color={c} />,
   "service-discovery": (c: string) => <ServiceDiscoveryDemo color={c} />,
+  "oop-pillars": (c: string) => <OopPillarsDemo color={c} />,
+  "refactor-naming": (c: string) => <RefactorDemo color={c} focus="naming" />,
+  "refactor-functions": (c: string) => <RefactorDemo color={c} focus="functions" />,
+  "refactor-dry": (c: string) => <RefactorDemo color={c} focus="dry" />,
+  "coupling": (c: string) => <CouplingDemo color={c} />,
+  "solid": (c: string) => <SolidDemo color={c} />,
+  "design-patterns": (c: string) => <DesignPatternsDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {

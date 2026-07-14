@@ -73,7 +73,14 @@ export type DemoId =
   | "arch-styles"
   | "api-gateway"
   | "load-balance"
-  | "service-discovery";
+  | "service-discovery"
+  | "oop-pillars"
+  | "refactor-naming"
+  | "refactor-functions"
+  | "refactor-dry"
+  | "coupling"
+  | "solid"
+  | "design-patterns";
 
 export type ContentBlock =
   | { type: "para"; text: string }

@@ -441,6 +441,7 @@ export const batchE: TopicContent[] = [
       "The four ideas — encapsulation, abstraction, inheritance, polymorphism — that object-oriented code is built on.",
     problem:
       "You're modeling a payment system with credit cards, PayPal, and bank transfers. Each has different internals but callers just want to 'charge $50'. You also want to stop code elsewhere from reaching in and corrupting a payment's internal state. How do you organize code so that shared behavior is reused, internals stay protected, and callers don't care which payment type they hold?",
+    demo: "oop-pillars",
     how: [
       {
         type: "para",
@@ -456,8 +457,17 @@ export const batchE: TopicContent[] = [
         ],
       },
       {
+        type: "code",
+        code: "class CreditCard { charge(amount) { /* Stripe API */ } }\nclass PayPal     { charge(amount) { /* PayPal API */ } }\n\n// Encapsulation: callers touch charge(), never the internals.\n// Polymorphism: one function works on any payment type.\nfunction checkout(payment, total) { payment.charge(total); }\n\ncheckout(new PayPal(), 50);      // caller never asks 'which type?'\ncheckout(new CreditCard(), 50);  // same call, different object",
+        caption: "Polymorphism lets one checkout() handle any payment; encapsulation keeps each type's internals private.",
+      },
+      {
         type: "note",
         text: "Of the four, inheritance is the one to use sparingly. Deep class hierarchies tightly couple child to parent and get brittle fast. Modern guidance leans on composition and interfaces (polymorphism) for reuse, reserving inheritance for genuine 'is-a' relationships.",
+      },
+      {
+        type: "demo",
+        demo: "oop-pillars",
       },
     ],
     tradeoffs: {
@@ -505,6 +515,7 @@ export const batchE: TopicContent[] = [
       "Choosing names that tell a reader what something is and does, so the code explains itself.",
     problem:
       "You open a file and read `d = calc(x, y, f)`. What is `d`? What does `calc` compute? What are `x`, `y`, `f`? You have to read the entire function body — maybe several — just to find out. Multiply that by every variable in a codebase and most of a developer's day is spent decoding names instead of understanding logic. How do you make code readable at a glance?",
+    demo: "refactor-naming",
     how: [
       {
         type: "para",
@@ -521,8 +532,17 @@ export const batchE: TopicContent[] = [
         ],
       },
       {
+        type: "code",
+        code: "// BEFORE: what is any of this?\nfunction calc(x, y, f) {\n  return f ? x * y * 0.9 : x * y;\n}\n\n// AFTER: the names are the explanation\nconst MEMBER_DISCOUNT = 0.9;\nfunction orderTotal(unitPrice, quantity, isMember) {\n  const subtotal = unitPrice * quantity;\n  return isMember ? subtotal * MEMBER_DISCOUNT : subtotal;\n}",
+        caption: "Same logic, but the second version needs no comment — the names carry the meaning.",
+      },
+      {
         type: "note",
         text: "If a good name is hard to find, that's a signal the thing is doing too much or isn't well understood yet. Renaming difficulty is often a design smell, not just a wording problem.",
+      },
+      {
+        type: "demo",
+        demo: "refactor-naming",
       },
     ],
     tradeoffs: {
@@ -570,6 +590,7 @@ export const batchE: TopicContent[] = [
       "Keeping each function focused on a single task so it's easy to read, test, and reuse.",
     problem:
       "You find a 300-line function called `processOrder` that validates input, calculates tax, charges the card, writes to the database, sends an email, and logs metrics. To fix a tax bug you have to understand all of it. You can't test the tax logic without also charging a card and sending an email. Every change risks breaking something unrelated. How should this be structured instead?",
+    demo: "refactor-functions",
     how: [
       {
         type: "para",
@@ -580,8 +601,17 @@ export const batchE: TopicContent[] = [
         text: "A useful test is the level of abstraction: a function should operate at one level. Mixing high-level orchestration ('charge the customer') with low-level detail (string formatting, byte manipulation) in the same body is a sign it's doing more than one thing and should be split.",
       },
       {
+        type: "code",
+        code: "// BEFORE: one function doing five jobs\nfunction processOrder(order) {\n  if (!order.items.length) throw new Error('empty');  // validate\n  order.total *= 1.08;                                 // tax\n  gateway.charge(order.card, order.total);            // charge\n  db.orders.insert(order);                            // save\n  email.send(order.user, 'Thanks!');                  // notify\n}\n\n// AFTER: orchestrate small, single-purpose steps\nfunction processOrder(order) {\n  validate(order);\n  applyTax(order);\n  charge(order);\n  save(order);\n  notify(order);\n}",
+        caption: "Each step is now named for its one job — and applyTax can be tested without charging a card.",
+      },
+      {
         type: "note",
         text: "'One thing' is about a single responsibility, not a literal line count — though functions that do one thing tend to be short. Don't shred code into so many one-line functions that following the logic means jumping through twenty files; readability is the actual goal.",
+      },
+      {
+        type: "demo",
+        demo: "refactor-functions",
       },
     ],
     tradeoffs: {
@@ -629,10 +659,16 @@ export const batchE: TopicContent[] = [
       "Don't Repeat Yourself: each piece of knowledge should live in exactly one place.",
     problem:
       "The rule 'orders over $100 ship free' is coded in the checkout page, the cart summary, the confirmation email, and a report. Marketing changes the threshold to $75. You update three of the four spots — and now the email quotes a number that contradicts the invoice. Whenever the same fact is written in many places, they drift out of sync. How do you keep one truth?",
+    demo: "refactor-dry",
     how: [
       {
         type: "para",
         text: "DRY says every piece of knowledge — a rule, a calculation, a constant — should have a single, authoritative representation. Instead of the free-shipping threshold living in four files, it lives in one place that all four call. Change it once and every use updates together, because they all read the same source.",
+      },
+      {
+        type: "code",
+        code: "// BEFORE: the same rule copied into four places\nif (cart.total > 100) shipping = 0;         // checkout page\nif (order.total > 100) note = 'Ships free';  // confirmation email\n// ...and two more, each hard-coding its own 100\n\n// AFTER: one source of truth everyone reads\nconst FREE_SHIPPING_OVER = 100;\nfunction qualifiesForFreeShipping(total) {\n  return total > FREE_SHIPPING_OVER;\n}",
+        caption: "Change the threshold once and every caller updates together — no copy can quietly drift.",
       },
       {
         type: "note",
@@ -646,6 +682,10 @@ export const batchE: TopicContent[] = [
           "A little duplication is fine while the right abstraction is still unclear.",
           "Prefer waiting for a third occurrence before abstracting — two can be coincidence.",
         ],
+      },
+      {
+        type: "demo",
+        demo: "refactor-dry",
       },
     ],
     tradeoffs: {
@@ -693,6 +733,7 @@ export const batchE: TopicContent[] = [
       "How tangled modules are with each other (coupling) versus how focused each one is internally (cohesion).",
     problem:
       "You change one field in the user module and three unrelated features break — reporting, billing, and search all reached directly into that field. Meanwhile the 'utils' module is a junk drawer of date math, string helpers, and tax rules that have nothing to do with each other. The system is hard to change precisely because of how its parts relate. What are we actually measuring here?",
+    demo: "coupling",
     how: [
       {
         type: "para",
@@ -703,6 +744,11 @@ export const batchE: TopicContent[] = [
         text: "The goal is low coupling and high cohesion. Modules interact through small, stable interfaces rather than reaching into each other's guts, and each module is about one thing. That combination is what lets you change one part without a chain reaction, and understand a module without reading the whole system.",
       },
       {
+        type: "code",
+        code: "// TIGHT: billing reaches deep into the user's internals\nfunction invoice(user) {\n  if (user.subscription.plan.tier === 'pro')   // 3 levels deep\n    return user.subscription.plan.price * 0.8;\n}\n// ...rename any of those fields and billing breaks.\n\n// LOOSE: talk through a small, stable interface\nfunction invoice(user) {\n  return user.monthlyCharge();   // user owns its own pricing\n}",
+        caption: "The loose version doesn't know how a user is priced, so changing those internals can't break it.",
+      },
+      {
         type: "points",
         items: [
           "Low coupling: modules talk through narrow, stable interfaces, not shared internals.",
@@ -710,6 +756,10 @@ export const batchE: TopicContent[] = [
           "A 'utils' or 'manager' grab-bag is the classic low-cohesion smell.",
           "One tweak cascading into far-off files is the classic high-coupling smell.",
         ],
+      },
+      {
+        type: "demo",
+        demo: "coupling",
       },
     ],
     tradeoffs: {
@@ -757,6 +807,7 @@ export const batchE: TopicContent[] = [
       "Five object-oriented design principles for code that's easier to change without breaking.",
     problem:
       "A report class formats data, decides where to save it, and knows about three specific export formats. Adding a fourth format means editing that class and risking the other three. Testing the formatting means also touching the file system. The class does too much and everything is wired to concrete details. Is there a checklist for avoiding this kind of rigid design?",
+    demo: "solid",
     how: [
       {
         type: "para",
@@ -773,8 +824,17 @@ export const batchE: TopicContent[] = [
         ],
       },
       {
+        type: "code",
+        code: "// Open/Closed + Dependency Inversion:\n// add a format by adding a class, not by editing save().\ninterface Exporter { export(report): string }\n\nclass CsvExporter  implements Exporter { export(r) { /* ... */ } }\nclass JsonExporter implements Exporter { export(r) { /* ... */ } }\n\n// Depends on the abstraction, so a new format never touches it:\nfunction save(report, exporter: Exporter) {\n  return exporter.export(report);\n}",
+        caption: "A fourth format is a new class — save() stays closed to modification, open to extension.",
+      },
+      {
         type: "note",
         text: "SOLID can be over-applied. Chasing every principle on a small program produces a maze of interfaces and indirection for flexibility you'll never use. Reach for a principle when you feel the pain it addresses — not preemptively on everything.",
+      },
+      {
+        type: "demo",
+        demo: "solid",
       },
     ],
     tradeoffs: {
@@ -822,6 +882,7 @@ export const batchE: TopicContent[] = [
       "Named, reusable solutions to problems that keep coming up in software design.",
     problem:
       "You need exactly one configuration object shared across the app. A teammate needs to create different kinds of report objects without hard-coding which. Another wants UI components to react when data changes. These are recurring shapes of problem, and people keep reinventing clumsy answers — and each invents different vocabulary for the same idea. Is there a shared catalog of proven solutions?",
+    demo: "design-patterns",
     how: [
       {
         type: "para",
@@ -837,8 +898,17 @@ export const batchE: TopicContent[] = [
         ],
       },
       {
+        type: "code",
+        code: "// Strategy: pick an algorithm at runtime, no if/else pile-up.\nconst shippingRates = {\n  standard:  (weight) => weight * 5,\n  express:   (weight) => weight * 12,\n  overnight: (weight) => weight * 25,\n};\n\nfunction shippingCost(method, weight) {\n  return shippingRates[method](weight);   // swap strategy by name\n}\n\n// Add a new speed by adding one entry — nothing else changes.",
+        caption: "The Strategy pattern: interchangeable algorithms behind one call, chosen at runtime.",
+      },
+      {
         type: "note",
         text: "Patterns are a vocabulary, not a goal. Forcing a pattern onto a problem that doesn't need one ('pattern-itis') adds complexity for no benefit. Many patterns also exist to work around limits of older languages — modern features like first-class functions make some of them nearly invisible.",
+      },
+      {
+        type: "demo",
+        demo: "design-patterns",
       },
     ],
     tradeoffs: {
