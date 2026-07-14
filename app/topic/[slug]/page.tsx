@@ -116,6 +116,13 @@ import DeadlockDemo from "@/components/demos/DeadlockDemo";
 import AtomicDemo from "@/components/demos/AtomicDemo";
 import ThreadPoolDemo from "@/components/demos/ThreadPoolDemo";
 import ChannelsDemo from "@/components/demos/ChannelsDemo";
+import CdnDemo from "@/components/demos/CdnDemo";
+import MessageQueueDemo from "@/components/demos/MessageQueueDemo";
+import ReplicationDemo from "@/components/demos/ReplicationDemo";
+import ShardingDemo from "@/components/demos/ShardingDemo";
+import HaDemo from "@/components/demos/HaDemo";
+import ScalabilityDemo from "@/components/demos/ScalabilityDemo";
+import FaultToleranceDemo from "@/components/demos/FaultToleranceDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -329,6 +336,13 @@ const DEMOS = {
   "atomic": (c: string) => <AtomicDemo color={c} />,
   "thread-pool": (c: string) => <ThreadPoolDemo color={c} />,
   "channels": (c: string) => <ChannelsDemo color={c} />,
+  "cdn-edge": (c: string) => <CdnDemo color={c} />,
+  "message-queue": (c: string) => <MessageQueueDemo color={c} />,
+  "replication": (c: string) => <ReplicationDemo color={c} />,
+  "sharding": (c: string) => <ShardingDemo color={c} />,
+  "high-availability": (c: string) => <HaDemo color={c} />,
+  "scalability": (c: string) => <ScalabilityDemo color={c} />,
+  "fault-tolerance": (c: string) => <FaultToleranceDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {

@@ -116,7 +116,14 @@ export type DemoId =
   | "deadlock"
   | "atomic"
   | "thread-pool"
-  | "channels";
+  | "channels"
+  | "cdn-edge"
+  | "message-queue"
+  | "replication"
+  | "sharding"
+  | "high-availability"
+  | "scalability"
+  | "fault-tolerance";
 
 export type ContentBlock =
   | { type: "para"; text: string }

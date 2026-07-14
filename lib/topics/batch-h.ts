@@ -582,10 +582,21 @@ export const batchH: TopicContent[] = [
       "Keeping copies of data close to where it's needed so you don't recompute or refetch it.",
     problem:
       "Your product page runs the same expensive database query for every visitor, and a user in Sydney waits 300ms just for bytes to cross the ocean from your server in Virginia. The data barely changes minute to minute, yet you pay the full cost — compute and distance — on every single request. Why keep doing the same work and the same long trip over and over?",
+    demo: "cdn-edge",
     how: [
       {
         type: "para",
         text: "Caching stores the result of expensive work (a query, a computation, a rendered page) so later requests can be served from the copy instead of redoing it. A CDN (content delivery network) applies the same idea to geography: it puts copies of your static assets — images, CSS, JS, sometimes whole pages — on servers spread around the world, so users are served from a nearby edge location instead of your origin. Caches live at many layers: in the browser, at the CDN edge, in a shared store like Redis, and inside the application and database.",
+      },
+      {
+        type: "code",
+        code: "// tell the browser and CDN edge how long a cached copy stays fresh\nCache-Control: public, max-age=60, s-maxage=300\n//   ↳ browser trusts its copy 60s; the CDN edge trusts its copy 300s\n//\n// user → nearest edge  (hit? serve in ~5ms, origin never touched)\n//                ↓ miss\n//           your origin (render once; the edge caches the result)",
+        caption:
+          "Cache-Control headers set how long the browser and the CDN edge trust a copy before re-fetching from origin.",
+      },
+      {
+        type: "demo",
+        demo: "cdn-edge",
       },
       {
         type: "points",
@@ -645,10 +656,21 @@ export const batchH: TopicContent[] = [
       "A buffer that lets services hand off work asynchronously instead of calling each other directly.",
     problem:
       "When a user places an order, you need to charge their card, send a confirmation email, update inventory, and notify the warehouse. If you do all of that inside the request, the user waits for the slowest step, and if the email service is down the whole order fails. These steps don't need to happen right now, together, or even reliably on the first try. Why make the user — and the order — hostage to every downstream service?",
+    demo: "message-queue",
     how: [
       {
         type: "para",
         text: "A message queue sits between a producer and a consumer. The producer drops a message (an order-placed event, a job to run) onto the queue and returns immediately; one or more consumers pull messages off and process them on their own schedule. This decouples the two sides in time (the consumer can be slow or briefly offline), in load (the queue absorbs bursts), and in failure (a crashed consumer just leaves the message for a retry).",
+      },
+      {
+        type: "code",
+        code: "// producer: enqueue and return immediately — the caller never waits\nqueue.publish(\"orders\", { orderId })   // returns in milliseconds\nrespond(202, \"order received\")\n\n// consumer: pulls on its own schedule (at-least-once delivery)\nqueue.consume(\"orders\", (msg) => {\n  if (done(msg.orderId)) return ack(msg)   // idempotent: safe to see twice\n  chargeCard(msg.orderId); sendEmail(msg.orderId)\n  ack(msg)                                 // ack only on success, else it retries\n})",
+        caption:
+          "The producer enqueues and returns; a consumer processes later and acks only on success, so failures are redelivered.",
+      },
+      {
+        type: "demo",
+        demo: "message-queue",
       },
       {
         type: "points",
@@ -709,10 +731,21 @@ export const batchH: TopicContent[] = [
       "Keeping copies of your data on multiple machines so reads scale and failures don't lose data.",
     problem:
       "Your entire application depends on one database server. It handles every read and every write, and the day its disk fails, your data — and your business — is gone. Even before that, all your read traffic piles onto that single machine until it's the bottleneck. Putting everything on one box is a single point of failure and a single point of contention. How do you keep more than one copy, safely?",
+    demo: "replication",
     how: [
       {
         type: "para",
         text: "Replication keeps copies of the data on multiple servers. The most common shape is leader-follower (primary-replica): all writes go to the leader, which streams its changes to one or more followers. Followers serve reads, which spreads read load and gives you standby copies. If the leader dies, a follower can be promoted to take over — that's failover.",
+      },
+      {
+        type: "code",
+        code: "// every write goes to the leader\nprimary.exec(\"UPDATE users SET name = $1 WHERE id = $2\", [name, id])\n\n// reads fan out to followers to spread the load\nconst u = replica.query(\"SELECT name FROM users WHERE id = $1\", [id])\n//   ↳ a follower can lag a few ms behind, so u.name may be the OLD value\n//     (read-your-writes: pin this user's reads to the leader briefly)",
+        caption:
+          "Writes hit the leader; reads scale out to followers — but replication lag means a follower can return a stale value.",
+      },
+      {
+        type: "demo",
+        demo: "replication",
       },
       {
         type: "points",
@@ -773,10 +806,21 @@ export const batchH: TopicContent[] = [
       "Splitting one huge dataset across many machines so no single one holds it all.",
     problem:
       "Read replicas let you scale reads, but every write still goes to one leader, and eventually the whole dataset no longer fits — or the write volume no longer fits — on a single machine. You can't just add more replicas; they're all copies of the same overloaded write path. When one box can't hold or handle all your data, copying it won't help. You have to split it.",
+    demo: "sharding",
     how: [
       {
         type: "para",
         text: "Sharding (horizontal partitioning) divides the data into pieces called shards, each living on a different machine, so every server holds and serves only a slice of the whole. A shard key (say, user ID) determines which shard a given row belongs to. Because different shards live on different machines, both storage and write throughput scale roughly linearly with the number of shards.",
+      },
+      {
+        type: "code",
+        code: "// route by the shard key (user id) — one shard handles this user\nconst shard = shards[hash(userId) % shards.length]\nshard.query(\"SELECT * FROM orders WHERE user_id = $1\", [userId])\n\n// a query WITHOUT the shard key must ask EVERY shard, then merge\nconst open = shards.map(s => s.query(\"SELECT * FROM orders WHERE status = 'open'\"))\n//   ↳ scatter-gather: slow, and it undercuts the whole point of sharding",
+        caption:
+          "With the shard key you hit exactly one shard; without it you scatter-gather across every shard and merge the results.",
+      },
+      {
+        type: "demo",
+        demo: "sharding",
       },
       {
         type: "points",
@@ -836,10 +880,21 @@ export const batchH: TopicContent[] = [
       "Spreading incoming requests across many servers so no single one is overwhelmed.",
     problem:
       "You've run several copies of your app to handle more traffic, but clients only know one address. If everyone hits server one, it drowns while the others idle. And the moment a server crashes, requests routed to it just fail. You need something in front that spreads work across the healthy servers and stops sending traffic to dead ones. Who directs the traffic?",
+    demo: "load-balance",
     how: [
       {
         type: "para",
         text: "A load balancer sits in front of a pool of servers and distributes incoming requests among them. Clients connect to the load balancer's single address; it forwards each request to one of the backends. Crucially, it health-checks the backends and stops routing to any that fail, so a dead server is quietly taken out of rotation instead of returning errors to users. This is what lets you scale horizontally and survive individual machine failures.",
+      },
+      {
+        type: "code",
+        code: "// clients hit one address; the LB forwards to a healthy backend\nconst healthy = backends.filter(b => b.passingHealthCheck)\nconst target  = healthy[requestCount++ % healthy.length]   // round-robin\nforward(request, target)\n//   ↳ a backend that fails its health check is pulled from rotation,\n//     so traffic is never routed to a dead server",
+        caption:
+          "The load balancer rotates requests across only the backends currently passing their health check.",
+      },
+      {
+        type: "demo",
+        demo: "load-balance",
       },
       {
         type: "points",
@@ -899,10 +954,21 @@ export const batchH: TopicContent[] = [
       "Designing a system to keep running even when individual parts fail.",
     problem:
       "Your service runs on one server, one database, in one data center. Any of them can fail — a disk dies, a deploy goes wrong, a whole region has an outage — and when one does, your users see downtime, sometimes for hours. In a system with a single copy of anything critical, that thing is a single point of failure, and its failure is your outage. How do you stay up when parts inevitably break?",
+    demo: "high-availability",
     how: [
       {
         type: "para",
         text: "High availability (HA) means eliminating single points of failure so the system as a whole keeps serving even when components fail. The core technique is redundancy — run more than one of everything critical — combined with automatic failover, so when one instance dies, another takes over without human intervention. Availability is measured in 'nines': 99.9% ('three nines') is about 8.7 hours of downtime a year; 99.99% is under an hour.",
+      },
+      {
+        type: "code",
+        code: "// redundancy + automatic failover = no single point of failure\nif (!primary.isHealthy()) {\n  promote(standby)            // a hot standby takes over in seconds\n  reroute(traffic, standby)   // no human paged, no visible outage\n}\n\n// availability is measured in \"nines\" of uptime per year:\n//   99.9%   (three nines) ≈ 8.7 hours of downtime\n//   99.99%  (four nines)  ≈ 52 minutes\n//   99.999% (five nines)  ≈ 5 minutes",
+        caption:
+          "A hot standby is promoted automatically when the primary fails; each extra 'nine' cuts allowed downtime roughly tenfold.",
+      },
+      {
+        type: "demo",
+        demo: "high-availability",
       },
       {
         type: "points",
@@ -962,10 +1028,21 @@ export const batchH: TopicContent[] = [
       "A system's ability to handle growing load by adding resources, without falling over.",
     problem:
       "Your app is snappy with a thousand users. You hit the news, a hundred thousand arrive in an hour, and everything grinds to a crawl — pages time out, the database maxes out, users leave. The design that was perfectly fine at small scale simply can't absorb the growth. The question isn't 'is it fast?' but 'what happens when load multiplies by 100 — can I add capacity, or do I have to rebuild?'",
+    demo: "scalability",
     how: [
       {
         type: "para",
         text: "Scalability is how well a system copes with more load — more users, requests, or data — by adding resources. There are two directions. Vertical scaling (scaling up) means a bigger machine: more CPU, RAM, faster disk. It's simple but hits a hard ceiling and gets expensive fast. Horizontal scaling (scaling out) means more machines working together; it scales much further but demands that your system be designed for it.",
+      },
+      {
+        type: "code",
+        code: "// vertical (scale up): one bigger box — simple, but hits a hard ceiling\n//   2 vCPU / 8 GB  →  64 vCPU / 512 GB ... then you can't buy bigger\n\n// horizontal (scale out): more boxes behind a load balancer — scales far,\n// but every server must be STATELESS so any instance can serve any request:\napp.get(\"/cart\", (req) => {\n  const cart = redis.get(req.userId)   // state lives in a shared store,\n  return render(cart)                  //   never in this server's memory\n})",
+        caption:
+          "Vertical scaling hits a hardware ceiling; horizontal scaling adds boxes but needs stateless servers backed by a shared store.",
+      },
+      {
+        type: "demo",
+        demo: "scalability",
       },
       {
         type: "points",
@@ -1025,10 +1102,21 @@ export const batchH: TopicContent[] = [
       "Building systems that keep working correctly even when parts of them fail.",
     problem:
       "In a distributed system, something is always broken: a network call times out, a downstream service is down, a disk is corrupt, a machine reboots. At scale, failure isn't an exception — it's the steady state. If one failing dependency can take down your whole service, you'll be down constantly. How do you keep functioning, at least partially, when the pieces you depend on are failing right now?",
+    demo: "fault-tolerance",
     how: [
       {
         type: "para",
         text: "Fault tolerance means designing so that failures are expected and contained rather than catastrophic. The goal isn't to prevent failure — you can't — but to degrade gracefully: keep serving what you can, isolate the broken part, and recover automatically. It combines several patterns that assume every call might fail.",
+      },
+      {
+        type: "code",
+        code: "try {\n  if (breaker.isOpen()) throw new Error(\"circuit open\")  // fail fast\n  return await withTimeout(callService(), 500)          // never wait forever\n} catch (err) {\n  breaker.recordFailure()      // trip the breaker after repeated failures\n  return cache.getStale(key)   // degrade gracefully instead of erroring\n}",
+        caption:
+          "A timeout bounds the wait, a circuit breaker stops hammering a dead dependency, and a stale fallback degrades instead of erroring.",
+      },
+      {
+        type: "demo",
+        demo: "fault-tolerance",
       },
       {
         type: "points",
