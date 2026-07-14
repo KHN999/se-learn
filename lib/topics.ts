@@ -123,7 +123,13 @@ export type DemoId =
   | "sharding"
   | "high-availability"
   | "scalability"
-  | "fault-tolerance";
+  | "fault-tolerance"
+  | "cap-theorem"
+  | "consistency-models"
+  | "eventual-consistency"
+  | "idempotency"
+  | "retry-backoff"
+  | "consensus";
 
 export type ContentBlock =
   | { type: "para"; text: string }

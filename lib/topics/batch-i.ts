@@ -7,10 +7,20 @@ export const batchI: TopicContent[] = [
       "When the network splits, a distributed system must choose between staying consistent and staying available.",
     problem:
       "Your database runs on three machines in two data centers. One day the link between the centers goes down, but both halves are still up and taking requests. A write lands on one side — do you let the other side keep serving reads it can no longer verify, or do you refuse to answer until the link is back? You can't do both, and pretending otherwise is how distributed systems quietly corrupt data.",
+    demo: "cap-theorem",
     how: [
       {
         type: "para",
         text: "CAP names three properties of a distributed system: Consistency (every read sees the latest write), Availability (every request gets a non-error response), and Partition tolerance (the system keeps working when messages between nodes are lost). The theorem says that when a partition happens, you can keep at most two — and since partitions are a fact of real networks, the real choice is between C and A during a partition.",
+      },
+      {
+        type: "code",
+        code: "// a node cut off from the majority must pick its behavior for the split:\nread(key) {\n  if (reachableQuorum()) return latest(key)   // no partition: consistent AND available\n  return MODE === 'CP'\n    ? refuse()                                  // stay correct, sacrifice availability\n    : stale(key)                                // stay up, serve a possibly-stale copy\n}",
+        caption: "With no partition you get both; during one, CP refuses while AP serves possibly-stale data.",
+      },
+      {
+        type: "demo",
+        demo: "cap-theorem",
       },
       {
         type: "points",
@@ -69,10 +79,20 @@ export const batchI: TopicContent[] = [
       "The contract for what a read is allowed to return when data is copied across machines.",
     problem:
       "You update your profile picture and it changes instantly on your phone — but a friend still sees the old one for a minute, and you yourself see the old one if you open the app on a laptop. Which of these are bugs and which are the system working as designed? Without a stated rule for what a read may return, every developer guesses, and the guesses disagree.",
+    demo: "consistency-models",
     how: [
       {
         type: "para",
         text: "A consistency model is a promise the system makes about the ordering and visibility of reads and writes. Stronger models are easier to reason about but need more coordination (and cost latency); weaker models are cheaper and more available but push surprises onto you. They form a spectrum, not a binary.",
+      },
+      {
+        type: "code",
+        code: "db.write('avatar', v2)                  // acknowledged by the primary\n\nread('avatar') via replica A -> v2      // caught up: fresh\nread('avatar') via replica B -> v1      // lagging: a STALE read\n\n// read-your-writes: route your session to a replica past your own write\nread('avatar', session: me) -> v2       // you never see your own change vanish",
+        caption: "Linearizable forbids the stale read entirely; a cheaper session guarantee fixes just your own view.",
+      },
+      {
+        type: "demo",
+        demo: "consistency-models",
       },
       {
         type: "points",
@@ -132,17 +152,28 @@ export const batchI: TopicContent[] = [
       "When copies of data are allowed to disagree for a moment before catching up.",
     problem:
       "You post a comment and refresh, but it's gone — then it reappears a second later. Behind the scenes your write went to one replica and your read hit another that hadn't received it yet. Why would a system show you stale data on purpose?",
+    demo: "eventual-consistency",
     how: [
       {
         type: "para",
         text: "In a distributed system, data is copied across machines. Keeping every copy identical at all times (strong consistency) requires coordination that costs latency and availability. Eventual consistency relaxes this: copies may differ briefly, but with no new writes they all converge to the same value.",
       },
       {
+        type: "code",
+        code: "// during a network split, two replicas take writes independently\nreplicaA.set('cart', ['book'])          // at t=1\nreplicaB.set('cart', ['book','pen'])    // at t=2  -> the copies now disagree\n\n// link heals: replicas gossip and reconcile by a fixed rule\nmerge(A, B) -> ['book','pen']           // last-write-wins / version vector / CRDT\n// afterwards every replica reads the same value -> converged",
+        caption: "Copies diverge under a split, then converge on one value once they can talk again.",
+      },
+      {
+        type: "demo",
+        demo: "eventual-consistency",
+      },
+      {
         type: "points",
         items: [
           "It buys availability and low latency, at the cost of temporary staleness.",
           "Fine for likes and feeds; dangerous for bank balances.",
-          "A direct consequence of the CAP tradeoff under network partitions.",
+          "Replicas converge by gossiping updates in the background; the gap between a write and convergence is the 'inconsistency window'.",
+          "A direct consequence of the CAP tradeoff — the AP side, staying available under a partition.",
         ],
       },
       {
@@ -180,10 +211,20 @@ export const batchI: TopicContent[] = [
       "Designing an operation so that doing it twice has the same effect as doing it once.",
     problem:
       "A user taps 'Pay' and the network stalls. Did the charge go through? Your phone times out and retries — and now you might be charged twice. The request may have succeeded on the server even though the client never saw the reply. In any system that retries (and every reliable one does), 'did this already happen?' is unanswerable, so the operation itself has to be safe to repeat.",
+    demo: "idempotency",
     how: [
       {
         type: "para",
         text: "An idempotent operation produces the same result no matter how many times it's applied. Reading a value is naturally idempotent; so is 'set balance to 100.' But 'add 100 to balance' is not — repeat it and the balance keeps climbing. The fix is to make repeats detectable or harmless.",
+      },
+      {
+        type: "code",
+        code: "// client retries the SAME key; the server dedups on it\nPOST /charges   Idempotency-Key: 7f3c-a91b   { amount: 5000 }\n\nfunction charge(key, amount) {\n  const seen = store.get(key)\n  if (seen) return seen                 // retry: replay stored result, no new charge\n  const result = gateway.charge(amount) // first time only: do the work once\n  store.put(key, result)                // remember it under the key\n  return result\n}",
+        caption: "The client resends the same idempotency key on a retry, so the server replays the stored result instead of charging a second time.",
+      },
+      {
+        type: "demo",
+        demo: "idempotency",
       },
       {
         type: "points",
@@ -242,10 +283,20 @@ export const batchI: TopicContent[] = [
       "How to keep a system working when the calls it depends on are slow, flaky, or dead.",
     problem:
       "Your service calls a payment provider that usually answers in 50ms. One afternoon it starts taking 30 seconds. Your threads pile up waiting, your own service runs out of workers, and now your entire site is down — because of someone else's slowness, not a bug of yours. In a distributed system, every remote call can hang or fail, and a request with no deadline is a request that can take forever.",
+    demo: "retry-backoff",
     how: [
       {
         type: "para",
         text: "The core idea is to never wait indefinitely and never assume a call succeeded. A timeout caps how long you'll wait before giving up. A retry re-attempts a failed call, ideally only for errors that might succeed next time. A circuit breaker stops calling a dependency that's clearly down, so you fail fast instead of piling up.",
+      },
+      {
+        type: "code",
+        code: "// retry only safe/idempotent calls; wait longer each time, with jitter\nasync function callWithRetry(fn, max = 5) {\n  for (let attempt = 0; attempt < max; attempt++) {\n    try { return await withTimeout(fn(), 2000) }        // cap EVERY attempt\n    catch (e) {\n      if (!isRetryable(e) || attempt === max - 1) throw e\n      const backoff = Math.min(2 ** attempt * 100, 5000) // 100, 200, 400, 800 ...\n      await sleep(backoff + Math.random() * 100)         // + jitter: desync clients\n    }\n  }\n}",
+        caption: "Every attempt has its own timeout; failures wait exponentially longer plus random jitter so clients don't all retry in lockstep.",
+      },
+      {
+        type: "demo",
+        demo: "retry-backoff",
       },
       {
         type: "points",
@@ -304,10 +355,20 @@ export const batchI: TopicContent[] = [
       "How a group of machines agrees on a single value even when some of them fail.",
     problem:
       "You run five servers so that losing one doesn't lose your data. But now they must agree on basic facts — who is the leader, what the next write is, in what order things happened. If two of them each think they're in charge and accept conflicting writes, your redundant system is worse than one machine: it's confidently wrong. How do independent nodes reach one answer despite crashes and network delays?",
+    demo: "consensus",
     how: [
       {
         type: "para",
         text: "Consensus algorithms let a cluster agree on a sequence of values such that once a value is decided, every non-faulty node agrees on it and it never changes. The common approach is majority (quorum) voting: a decision needs agreement from more than half the nodes, so no two conflicting decisions can both win, and the system tolerates a minority failing.",
+      },
+      {
+        type: "code",
+        code: "// a 5-node cluster: a write commits only once a MAJORITY acks it\nconst N = 5\nconst quorum = Math.floor(N / 2) + 1       // = 3, a strict majority (> N/2)\n\nfunction commit(value) {\n  const acks = replicateToPeers(value)     // ask every node to accept\n  return acks >= quorum ? 'committed'      // 3 of 5 agree -> decided, durable\n                        : 'rejected'       // no majority reachable -> refuse\n}\n// survives 2 nodes down (5 - 3); lose a 3rd and there's no quorum -> progress stops",
+        caption: "A value is decided only when a strict majority (3 of 5) accepts it, so two conflicting majorities can never both win — and an odd count tolerates the most failures per node.",
+      },
+      {
+        type: "demo",
+        demo: "consensus",
       },
       {
         type: "points",

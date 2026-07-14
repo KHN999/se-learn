@@ -123,6 +123,12 @@ import ShardingDemo from "@/components/demos/ShardingDemo";
 import HaDemo from "@/components/demos/HaDemo";
 import ScalabilityDemo from "@/components/demos/ScalabilityDemo";
 import FaultToleranceDemo from "@/components/demos/FaultToleranceDemo";
+import CapDemo from "@/components/demos/CapDemo";
+import ConsistencyDemo from "@/components/demos/ConsistencyDemo";
+import EventualDemo from "@/components/demos/EventualDemo";
+import IdempotencyDemo from "@/components/demos/IdempotencyDemo";
+import RetryDemo from "@/components/demos/RetryDemo";
+import ConsensusDemo from "@/components/demos/ConsensusDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -343,6 +349,12 @@ const DEMOS = {
   "high-availability": (c: string) => <HaDemo color={c} />,
   "scalability": (c: string) => <ScalabilityDemo color={c} />,
   "fault-tolerance": (c: string) => <FaultToleranceDemo color={c} />,
+  "cap-theorem": (c: string) => <CapDemo color={c} />,
+  "consistency-models": (c: string) => <ConsistencyDemo color={c} />,
+  "eventual-consistency": (c: string) => <EventualDemo color={c} />,
+  "idempotency": (c: string) => <IdempotencyDemo color={c} />,
+  "retry-backoff": (c: string) => <RetryDemo color={c} />,
+  "consensus": (c: string) => <ConsensusDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {
