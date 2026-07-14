@@ -7,6 +7,7 @@ export const batchC: TopicContent[] = [
       "How Git actually stores history — snapshots, commits, and branches as pointers.",
     problem:
       "You have a folder of code and a familiar mess: project_final, project_final_v2, project_final_ACTUAL. You can't tell what changed between them, you can't safely undo one edit without risking the rest, and when a teammate emails you their copy you have to merge it by hand. You need a system that remembers every version, who made it and why, and lets several people work on the same files at once.",
+    demo: "git-objects",
     how: [
       {
         type: "para",
@@ -24,6 +25,15 @@ export const batchC: TopicContent[] = [
           "Repository: the committed history — the snapshots that are saved for good.",
           "Because a commit's ID comes from its content, history is tamper-evident: change anything and every later ID changes too.",
         ],
+      },
+      {
+        type: "code",
+        code: "$ git commit -m 'Add login page'\n[main 9a3f21c] Add login page\n\n$ git cat-file -p HEAD          # inspect the commit object\ntree   4b825dc6...             # a full snapshot of every tracked file\nparent 7c1e9d2f...             # a pointer to the commit before this one\nauthor Ada <ada@ex.com> ...\n\n$ git log --oneline\n9a3f21c (HEAD -> main) Add login page\n7c1e9d2 Initial commit",
+        caption: "A commit is a full tree snapshot plus a pointer to its parent, addressed by a hash; the branch label and HEAD just point at the newest commit.",
+      },
+      {
+        type: "demo",
+        demo: "git-objects",
       },
       {
         type: "note",
@@ -65,6 +75,7 @@ export const batchC: TopicContent[] = [
       "The handful of commands that make up 95% of your daily Git usage.",
     problem:
       "You've made some changes and you want them saved and shared with your team. But Git has dozens of commands and cryptic error messages, and you're not sure which few you actually need to get through a normal workday without breaking anything. What's the minimal loop?",
+    demo: "git-areas",
     how: [
       {
         type: "para",
@@ -83,6 +94,15 @@ export const batchC: TopicContent[] = [
       {
         type: "para",
         text: "Two more save you regularly: 'git log' shows the history so you can see what happened, and 'git diff' shows the exact lines you've changed but not yet committed. Getting into the habit of reading status and diff before every commit prevents most mistakes.",
+      },
+      {
+        type: "code",
+        code: "$ git status\nOn branch main\nChanges not staged for commit:\n  modified:   cart.js\n\n$ git add cart.js               # working directory -> staging area\n$ git commit -m 'Fix crash when cart is empty'\n[main 3f9a1c2] Fix crash when cart is empty\n 1 file changed, 4 insertions(+), 1 deletion(-)\n\n$ git push                      # local repo -> remote\n   7c1e9d2..3f9a1c2  main -> main",
+        caption: "The everyday loop: status to see what changed, add to stage it, commit to snapshot it, push to share it.",
+      },
+      {
+        type: "demo",
+        demo: "git-areas",
       },
       {
         type: "note",
@@ -116,6 +136,7 @@ export const batchC: TopicContent[] = [
       "Working on a change in isolation, then folding it back into the main line.",
     problem:
       "You need to build a new feature, but you can't just edit the live codebase directly — half-finished work would break things for everyone, and if an urgent bug comes in you'd have no clean version to fix. You want a private line of development where you can commit freely, then combine it with everyone else's work when it's ready.",
+    demo: "branch-merge",
     how: [
       {
         type: "para",
@@ -132,6 +153,15 @@ export const batchC: TopicContent[] = [
           "Three-way merge: both sides advanced; a merge commit joins them, preserving both histories.",
           "A conflict happens only when both sides changed the same lines — Git can't guess which to keep.",
         ],
+      },
+      {
+        type: "code",
+        code: "$ git switch -c feature         # create and switch to a new branch\n$ git commit -m 'Add filter'    # commit freely; main is untouched\n\n$ git switch main\n$ git merge feature\nMerge made by the 'ort' strategy.   # main had moved: a merge commit, 2 parents\n filter.js | 12 ++++++++++++\n\n# had main NOT moved, Git prints 'Fast-forward' and just slides the pointer up",
+        caption: "Merge folds a branch back in: a fast-forward when main hasn't moved, otherwise a merge commit with two parents.",
+      },
+      {
+        type: "demo",
+        demo: "branch-merge",
       },
       {
         type: "note",
@@ -165,6 +195,7 @@ export const batchC: TopicContent[] = [
       "Replaying your commits on top of the latest main to keep history linear.",
     problem:
       "You branched off main a week ago and did five commits. Meanwhile main got ten new commits. If you merge, your history gets a tangled web of merge commits that's hard to read. What if you could pretend you'd started your work from today's main all along, so your five commits sit cleanly on top?",
+    demo: "rebase",
     how: [
       {
         type: "para",
@@ -181,6 +212,15 @@ export const batchC: TopicContent[] = [
           "Interactive rebase (git rebase -i) lets you squash, reorder, edit, or drop commits before they land.",
           "Conflicts are resolved one commit at a time, then 'git rebase --continue'.",
         ],
+      },
+      {
+        type: "code",
+        code: "$ git switch feature\n$ git rebase main\nApplying: Add filter\nApplying: Add sort\nSuccessfully rebased and updated refs/heads/feature.\n\n# your commits now sit on top of the latest main -- but as NEW commits with\n# NEW hashes (the originals are abandoned), so the history stays one straight line",
+        caption: "Rebase replays your commits onto the latest main as brand-new commits, giving a linear history with no merge commit.",
+      },
+      {
+        type: "demo",
+        demo: "rebase",
       },
       {
         type: "note",
@@ -215,6 +255,7 @@ export const batchC: TopicContent[] = [
       "Deciding what the code should be when two people changed the same lines.",
     problem:
       "You finish your feature and try to merge. Git stops and reports a conflict: you and a teammate both edited the same function in the same file, in different ways. Git refuses to guess which version is right — it has put both versions into the file, marked with strange <<<<<<< symbols, and it's now your job to sort out.",
+    demo: "merge-conflict",
     how: [
       {
         type: "para",
@@ -232,6 +273,15 @@ export const batchC: TopicContent[] = [
       {
         type: "para",
         text: "Resolving a conflict is a judgment call, not a mechanical merge. Sometimes you keep yours, sometimes theirs, and often you write a new version combining both intents. After fixing every conflicted file and staging them, you complete the merge (or run 'git rebase --continue'). Always re-run the tests afterward — a conflict resolution that compiles can still be logically wrong.",
+      },
+      {
+        type: "code",
+        code: "$ git merge feature\nAuto-merging config.js\nCONFLICT (content): Merge conflict in config.js\nAutomatic merge failed; fix conflicts and then commit the result.\n\n# config.js now holds BOTH versions, marked for a human to choose between:\n<<<<<<< HEAD\ntimeout = 30        # your branch\n=======\ntimeout = 60        # incoming from feature\n>>>>>>> feature\n\n# edit to the intended result, delete the markers, then: git add + git commit",
+        caption: "Git marks the clashing lines with <<<<<<< ======= >>>>>>>; a human edits to the final version, then stages and commits.",
+      },
+      {
+        type: "demo",
+        demo: "merge-conflict",
       },
       {
         type: "note",
@@ -266,6 +316,7 @@ export const batchC: TopicContent[] = [
       "Proposing a change and having a human read it before it reaches main.",
     problem:
       "A teammate could push code straight to main that breaks the build, ignores a security check, or is simply hard to understand — and nobody would notice until it's live. You want a checkpoint: a place where a change is proposed, discussed, and approved before it becomes part of the shared codebase.",
+    demo: "pr-review",
     how: [
       {
         type: "para",
@@ -283,6 +334,15 @@ export const batchC: TopicContent[] = [
       {
         type: "para",
         text: "Code review is as much about the humans as the code. It spreads knowledge (now two people understand this change), catches bugs early, and enforces shared standards. Good reviews are specific and kind; good PRs are small enough to actually review — a 2000-line PR gets a rubber-stamp, a 100-line PR gets real scrutiny.",
+      },
+      {
+        type: "code",
+        code: "$ git push -u origin feature/cart-fix\n$ gh pr create --title 'Fix crash on empty cart' --base main\nhttps://github.com/shop/store/pull/128\n\n$ gh pr checks 128\nbuild    pass\ntests    pass\nlint     pass\n\n# a reviewer reads the diff, comments inline, approves -> then it merges to main",
+        caption: "Push the branch, open a PR, and let CI checks and a human reviewer vet the diff before it lands on main.",
+      },
+      {
+        type: "demo",
+        demo: "pr-review",
       },
       {
         type: "note",

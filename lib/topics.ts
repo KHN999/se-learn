@@ -149,7 +149,13 @@ export type DemoId =
   | "single-multi"
   | "scheduling"
   | "virtual-memory"
-  | "file-perms";
+  | "file-perms"
+  | "git-objects"
+  | "git-areas"
+  | "branch-merge"
+  | "rebase"
+  | "merge-conflict"
+  | "pr-review";
 
 export type ContentBlock =
   | { type: "para"; text: string }

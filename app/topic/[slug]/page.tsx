@@ -149,6 +149,12 @@ import SingleMultiDemo from "@/components/demos/SingleMultiDemo";
 import SchedulingDemo from "@/components/demos/SchedulingDemo";
 import VirtualMemoryDemo from "@/components/demos/VirtualMemoryDemo";
 import FilePermsDemo from "@/components/demos/FilePermsDemo";
+import GitObjectsDemo from "@/components/demos/GitObjectsDemo";
+import GitAreasDemo from "@/components/demos/GitAreasDemo";
+import BranchMergeDemo from "@/components/demos/BranchMergeDemo";
+import RebaseDemo from "@/components/demos/RebaseDemo";
+import MergeConflictDemo from "@/components/demos/MergeConflictDemo";
+import PrReviewDemo from "@/components/demos/PrReviewDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -395,6 +401,12 @@ const DEMOS = {
   "scheduling": (c: string) => <SchedulingDemo color={c} />,
   "virtual-memory": (c: string) => <VirtualMemoryDemo color={c} />,
   "file-perms": (c: string) => <FilePermsDemo color={c} />,
+  "git-objects": (c: string) => <GitObjectsDemo color={c} />,
+  "git-areas": (c: string) => <GitAreasDemo color={c} />,
+  "branch-merge": (c: string) => <BranchMergeDemo color={c} />,
+  "rebase": (c: string) => <RebaseDemo color={c} />,
+  "merge-conflict": (c: string) => <MergeConflictDemo color={c} />,
+  "pr-review": (c: string) => <PrReviewDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {
