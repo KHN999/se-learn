@@ -7,10 +7,21 @@ export const batchH: TopicContent[] = [
       "Whether your code waits for a slow operation to finish, or moves on and is told later.",
     problem:
       "A web server calls a payment API that takes two seconds to respond. If the server just sits and waits, that whole thread is frozen for two seconds doing nothing but staring at the network — and while it waits, it can't serve anyone else. Multiply that by a few hundred concurrent users and the server falls over, not because it's busy, but because it's idle in the worst possible way. How do you keep working while you wait?",
+    demo: "sync-async",
     how: [
       {
         type: "para",
         text: "Synchronous means one thing at a time in order: you call an operation, and the next line doesn't run until it returns. Asynchronous means you kick off the operation and continue; when it eventually finishes, its result arrives via a callback, a promise/future, or by resuming a suspended function. The key insight is that most waiting is for I/O — network, disk, another service — and during that wait the CPU has nothing to do, so a single thread can start hundreds of I/O operations and handle each as it completes.",
+      },
+      {
+        type: "code",
+        code: "// synchronous: the thread blocks here, doing nothing but waiting\nconst user = db.query(sql)        // ← thread frozen until it returns\nrender(user)\n\n// asynchronous: start the wait, let the thread do other work\nconst user = await db.query(sql)  // ← thread is freed to serve\nrender(user)                      //   other requests while it waits",
+        caption:
+          "Sync freezes the thread until the I/O returns; async frees it to serve others while it waits.",
+      },
+      {
+        type: "demo",
+        demo: "sync-async",
       },
       {
         type: "points",
@@ -70,38 +81,51 @@ export const batchH: TopicContent[] = [
       "When the result depends on the exact timing of things happening at once.",
     problem:
       "Two requests both read a counter at 41, both add one, both write 42. Two increments happened but the counter only went up by one. The bug appears once in a thousand runs and never in your tests. What went wrong?",
+    demo: "race-counter",
     how: [
       {
         type: "para",
-        text: "A race condition happens when two threads or processes touch shared state and the outcome depends on who runs first. Because scheduling is unpredictable, the interleaving that breaks things happens rarely and non-deterministically.",
+        text: "A race condition is unsynchronized access to shared mutable state, where the final result depends on the exact order in which concurrent threads happen to interleave. The name is literal: two threads are racing to read and write the same data, and because the operating system can pause and resume either one at any instant, the specific interleaving that corrupts your data occurs only rarely and unpredictably. That's what makes races so insidious — the code looks obviously correct, passes every test, and then loses an update once in a thousand runs under real load.",
+      },
+      {
+        type: "code",
+        code: "// two threads run this on the same shared counter\ncount = count + 1\n//   ↑ really three steps: read count, add 1, write it back\n//\n// unlucky interleaving:\n//   T1 reads 41 · T2 reads 41 · T1 writes 42 · T2 writes 42\n//   two increments happened, but count only moved by one",
+        caption:
+          "The single line count = count + 1 is a read-modify-write; a bad interleaving silently loses an update.",
+      },
+      {
+        type: "demo",
+        demo: "race-counter",
       },
       {
         type: "points",
         items: [
-          "The fix is to make the critical section atomic — one at a time.",
-          "Tools: locks/mutexes, atomic operations, or database transactions.",
-          "Read-modify-write on shared data is the classic trigger.",
+          "The trigger is almost always a read-modify-write on shared state — increment a counter, check-then-act, append to a list.",
+          "The fix is to make the critical section atomic: only one thread may execute it at a time.",
+          "Tools, lightest to heaviest: atomic operations, then mutexes/locks, then database transactions.",
+          "Data that only one thread touches — or that's never mutated after creation — can't race. Sharing plus mutation is the hazard.",
         ],
       },
       {
         type: "note",
-        text: "The window is often a single 'increment' that is really three steps under the hood — read, add, write — and any of them can be interrupted between the others.",
+        text: "The window is often a single 'increment' that is really three steps under the hood — read, add, write — and the scheduler can interrupt a thread between any of them, letting another thread slip in and act on stale data.",
       },
     ],
     tradeoffs: {
       good: [
-        "Understanding them prevents a whole class of heisenbugs.",
-        "Fixes are well-understood (locks, atomics).",
-        "Databases give you transactions for the same problem.",
+        "Understanding them prevents a whole class of intermittent, load-only heisenbugs.",
+        "The fixes are well-understood and standard (atomics, mutexes, transactions).",
+        "Databases hand you transactions and row locks for exactly this problem.",
       ],
       costs: [
-        "Hard to reproduce and debug.",
-        "Over-locking to be safe hurts concurrency.",
-        "Easy to introduce a deadlock while fixing a race.",
+        "Notoriously hard to reproduce and debug — they surface only when timing lines up.",
+        "They rarely appear in tests; they show up under real production concurrency.",
+        "Over-locking 'to be safe' serializes work and throws away concurrency.",
+        "Add locks carelessly to fix one and you can introduce a deadlock instead.",
       ],
     },
     realWorld:
-      "The 'lost update' and 'sold the last item twice' bugs are races; they hide until load rises.",
+      "The classic 'lost update' (two people edit the same record and one change vanishes) and 'sold the last item twice' (two orders both see one unit in stock) bugs are races. They stay invisible in development and quietly corrupt data once real concurrent traffic arrives — which is why they so often surface as a mysterious, hard-to-reproduce production incident.",
     related: [
       { slug: "mutex", note: "The main tool to prevent races." },
       { slug: "locks", note: "The database-level equivalent for shared rows." },
@@ -115,10 +139,21 @@ export const batchH: TopicContent[] = [
       "A lock that lets exactly one thread into a section of code at a time.",
     problem:
       "Two threads both run counter++ on the same variable. That single line is really read, add, write — and if the threads interleave those steps, one increment gets lost. You need a way to say 'while I'm doing this, nobody else touches it.' How do you enforce one-at-a-time access to shared data?",
+    demo: "mutex",
     how: [
       {
         type: "para",
         text: "A mutex — short for mutual exclusion — is a lock a thread acquires before entering a critical section and releases when it leaves. Only one thread can hold it at a time; any other thread that tries to acquire it blocks (waits) until the holder releases. This turns a stretch of code that touches shared state into an indivisible unit: while you hold the mutex, you're guaranteed no other thread is inside the same section.",
+      },
+      {
+        type: "code",
+        code: "mutex.lock()          // only one thread gets past this line\ntry {\n  count = count + 1   // critical section — runs one-at-a-time\n} finally {\n  mutex.unlock()      // always release, even on error\n}",
+        caption:
+          "Acquire before the critical section, release in finally — so a thrown error can't strand the lock.",
+      },
+      {
+        type: "demo",
+        demo: "mutex",
       },
       {
         type: "points",
@@ -178,10 +213,21 @@ export const batchH: TopicContent[] = [
       "A counter that limits how many threads can use a resource at once.",
     problem:
       "You have a pool of 10 database connections, but 200 threads that all want one. If they all grab connections at once, you exhaust the pool and everything breaks. A plain mutex only allows one at a time — too restrictive. You want 'up to 10 at a time, the rest wait.' How do you cap concurrent access at a number greater than one?",
+    demo: "semaphore",
     how: [
       {
         type: "para",
         text: "A semaphore holds a count of available 'permits'. A thread calls acquire (wait) to take a permit — if the count is above zero it decrements and proceeds; if it's zero the thread blocks until a permit is returned. When done, the thread calls release (signal), incrementing the count and waking a waiter. Initialize it to N and you've capped concurrency at N. A binary semaphore (count of 1) behaves much like a mutex.",
+      },
+      {
+        type: "code",
+        code: "const pool = new Semaphore(10)   // 10 permits = 10 connections\n\nawait pool.acquire()             // blocks here if all 10 are taken\ntry {\n  await useConnection()          // up to 10 threads run this at once\n} finally {\n  pool.release()                 // return the permit; wake a waiter\n}",
+        caption:
+          "A semaphore of N permits lets up to N threads run the guarded section at once; the rest wait.",
+      },
+      {
+        type: "demo",
+        demo: "semaphore",
       },
       {
         type: "points",
@@ -240,10 +286,21 @@ export const batchH: TopicContent[] = [
       "Two or more threads each waiting forever for a lock the other holds.",
     problem:
       "Thread A grabs lock 1 and then reaches for lock 2. At the same moment, thread B holds lock 2 and reaches for lock 1. Neither will release what it has until it gets the other. Both stop, forever, and the part of your system that needs those resources simply hangs. Nothing crashes — it just freezes. How does this happen, and how do you prevent it?",
+    demo: "deadlock",
     how: [
       {
         type: "para",
         text: "A deadlock needs four conditions to hold at once (the Coffman conditions): mutual exclusion (a resource can be held by only one at a time), hold-and-wait (you keep what you have while waiting for more), no preemption (locks can't be forcibly taken away), and circular wait (a cycle of who-waits-for-whom). Break any one of these and deadlock becomes impossible.",
+      },
+      {
+        type: "code",
+        code: "// Thread A            // Thread B\nlock(a)                lock(b)\nlock(b)  // waits →     lock(a)  // waits →\n//   ↳ each holds what the other needs: circular wait, hangs forever\n\n// Fix: everyone acquires in ONE global order\nlock(a); lock(b)       lock(a); lock(b)",
+        caption:
+          "Opposite lock orders form a cycle where each thread waits on the other; one global order prevents it.",
+      },
+      {
+        type: "demo",
+        demo: "deadlock",
       },
       {
         type: "points",
@@ -303,10 +360,21 @@ export const batchH: TopicContent[] = [
       "A single indivisible operation that can't be interrupted halfway through.",
     problem:
       "Protecting a shared counter with a full mutex works, but it feels heavy: every increment now involves acquiring a lock, possibly blocking a thread, and releasing it — a lot of machinery just to add one to a number. Under high contention, threads spend more time waiting on the lock than doing work. Is there a way to update shared data safely without the overhead of locking?",
+    demo: "atomic",
     how: [
       {
         type: "para",
         text: "An atomic operation completes as a single, indivisible step from the perspective of other threads — no one can observe it half-done. Modern CPUs provide atomic instructions for small operations: atomic increment, atomic swap, and especially compare-and-swap (CAS), which says 'if this value is still X, set it to Y — and tell me whether it worked.' Building on CAS in a retry loop, you can update shared state correctly without ever taking a lock.",
+      },
+      {
+        type: "code",
+        code: "// lock-free increment via compare-and-swap (CAS)\nlet cur, next\ndo {\n  cur  = counter.load()\n  next = cur + 1\n} while (!counter.compareAndSet(cur, next))\n//   ↳ retry only if another thread changed it in between — no lock",
+        caption:
+          "CAS writes only if the value is unchanged since you read it; loop until it wins — no blocking, no lock.",
+      },
+      {
+        type: "demo",
+        demo: "atomic",
       },
       {
         type: "points",
@@ -366,10 +434,21 @@ export const batchH: TopicContent[] = [
       "A fixed set of reusable worker threads that pull tasks from a queue.",
     problem:
       "Your server spawns a brand-new thread for every incoming request. Under a traffic spike, ten thousand requests arrive and you try to create ten thousand threads. Each thread costs a megabyte or more of memory and adds scheduling overhead, so the machine thrashes and grinds to a halt — creating threads is now more expensive than the work itself. How do you handle bursts of work without an unbounded explosion of threads?",
+    demo: "thread-pool",
     how: [
       {
         type: "para",
         text: "A thread pool creates a fixed number of worker threads up front and reuses them. Incoming tasks go onto a shared queue; idle workers pick up the next task, run it, and loop back for another. This caps concurrency at the pool size, amortizes the cost of thread creation across many tasks, and gives you a natural place to apply backpressure — when the queue fills, you can reject, block, or shed load rather than melt down.",
+      },
+      {
+        type: "code",
+        code: "const pool = new ThreadPool(8)        // 8 reusable workers\n\nfor (const req of incoming) {\n  pool.submit(() => handle(req))      // enqueue; a free worker runs it\n}\n//   8 tasks run at once, the rest wait in the queue —\n//   no new thread spawned per request",
+        caption:
+          "Tasks queue up; a fixed set of workers drains them, capping concurrency instead of spawning threads.",
+      },
+      {
+        type: "demo",
+        demo: "thread-pool",
       },
       {
         type: "points",
@@ -429,10 +508,21 @@ export const batchH: TopicContent[] = [
       "A typed pipe that lets goroutines communicate by passing values, not by sharing memory.",
     problem:
       "The usual way threads coordinate is through shared variables guarded by locks — and that's exactly where race conditions, deadlocks, and forgotten unlocks live. It's error-prone precisely because everyone is reaching into the same memory. What if instead of sharing memory and locking it, one goroutine just handed the data to another?",
+    demo: "channels",
     how: [
       {
         type: "para",
         text: "A channel is a typed conduit in Go: one goroutine sends a value into it, another receives. The channel itself handles the synchronization. Go's guiding slogan is 'do not communicate by sharing memory; instead, share memory by communicating' — ownership of the data passes through the channel, so only one goroutine touches it at a time by construction, without an explicit lock.",
+      },
+      {
+        type: "code",
+        code: "jobs := make(chan int, 100)   // buffered channel doubles as a queue\n\ngo func() {                   // producer goroutine\n    for _, j := range work {\n        jobs <- j             // send a value in\n    }\n    close(jobs)               // signal: no more values coming\n}()\n\nfor j := range jobs {         // consumer receives until closed\n    process(j)\n}",
+        caption:
+          "One goroutine sends, another receives; the channel handles the synchronization — no shared lock.",
+      },
+      {
+        type: "demo",
+        demo: "channels",
       },
       {
         type: "points",

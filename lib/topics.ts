@@ -108,7 +108,15 @@ export type DemoId =
   | "cache-hit"
   | "compression"
   | "conn-pool"
-  | "n-plus-1";
+  | "n-plus-1"
+  | "sync-async"
+  | "race-counter"
+  | "mutex"
+  | "semaphore"
+  | "deadlock"
+  | "atomic"
+  | "thread-pool"
+  | "channels";
 
 export type ContentBlock =
   | { type: "para"; text: string }

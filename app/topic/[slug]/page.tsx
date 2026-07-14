@@ -108,6 +108,14 @@ import CacheDemo from "@/components/demos/CacheDemo";
 import CompressionDemo from "@/components/demos/CompressionDemo";
 import ConnPoolDemo from "@/components/demos/ConnPoolDemo";
 import NPlusOneDemo from "@/components/demos/NPlusOneDemo";
+import SyncAsyncDemo from "@/components/demos/SyncAsyncDemo";
+import RaceConditionDemo from "@/components/demos/RaceConditionDemo";
+import MutexDemo from "@/components/demos/MutexDemo";
+import SemaphoreDemo from "@/components/demos/SemaphoreDemo";
+import DeadlockDemo from "@/components/demos/DeadlockDemo";
+import AtomicDemo from "@/components/demos/AtomicDemo";
+import ThreadPoolDemo from "@/components/demos/ThreadPoolDemo";
+import ChannelsDemo from "@/components/demos/ChannelsDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -313,6 +321,14 @@ const DEMOS = {
   "compression": (c: string) => <CompressionDemo color={c} />,
   "conn-pool": (c: string) => <ConnPoolDemo color={c} />,
   "n-plus-1": (c: string) => <NPlusOneDemo color={c} />,
+  "sync-async": (c: string) => <SyncAsyncDemo color={c} />,
+  "race-counter": (c: string) => <RaceConditionDemo color={c} />,
+  "mutex": (c: string) => <MutexDemo color={c} />,
+  "semaphore": (c: string) => <SemaphoreDemo color={c} />,
+  "deadlock": (c: string) => <DeadlockDemo color={c} />,
+  "atomic": (c: string) => <AtomicDemo color={c} />,
+  "thread-pool": (c: string) => <ThreadPoolDemo color={c} />,
+  "channels": (c: string) => <ChannelsDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {
@@ -411,9 +427,13 @@ export default async function TopicPage({
 
           <section className="mt-10 space-y-4">
             <SectionTitle color={c}>How it works</SectionTitle>
-            {content.how.map((b, i) => (
-              <Block key={i} block={b} color={c} />
-            ))}
+            {content.how
+              // The top-level `demo` renders as a hero above; skip any inline
+              // demo block that repeats it so a demo never shows up twice.
+              .filter((b) => !(b.type === "demo" && b.demo === content.demo))
+              .map((b, i) => (
+                <Block key={i} block={b} color={c} />
+              ))}
           </section>
 
           <section className="mt-10">
