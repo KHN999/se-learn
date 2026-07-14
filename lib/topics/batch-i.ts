@@ -1022,10 +1022,21 @@ export const batchI: TopicContent[] = [
       "Ways of working that favor small, frequent deliveries and adapting over a fixed long-term plan.",
     problem:
       "A team spends six months building exactly what a big upfront spec said, then ships it — and discovers users actually needed something different, or the market moved. All that work, and the feedback came too late to matter. When requirements are uncertain (and they usually are), betting everything on a plan made before you knew anything is how projects fail slowly. How do you build in a way that lets you course-correct while there's still time?",
+    demo: "kanban",
     how: [
       {
         type: "para",
         text: "Agile is a set of values, not a specific process: deliver working software frequently, get feedback early, and adapt as you learn instead of following a rigid multi-month plan. Scrum and Kanban are two concrete ways to work in that spirit. Scrum organizes work into fixed-length iterations (sprints) with defined roles and ceremonies; Kanban visualizes a continuous flow of work and limits how much is in progress at once.",
+      },
+      {
+        type: "code",
+        code: "BACKLOG        IN PROGRESS      REVIEW           DONE\n                (WIP 2)          (WIP 2)\n- Login form   - Search API     - Cart fix        - Signup\n- Reports      - Email queue    (empty)           - Logout\n- Dark mode    [ 2/2 - full ]\n\n// In Progress is at its WIP limit -> finish a card before pulling the next",
+        caption:
+          "A Kanban board: work flows left to right and WIP limits cap how much is in progress, so the team is forced to finish before it starts more.",
+      },
+      {
+        type: "demo",
+        demo: "kanban",
       },
       {
         type: "points",
@@ -1086,10 +1097,21 @@ export const batchI: TopicContent[] = [
       "Timeboxing work into short cycles and estimating effort by relative size instead of hours.",
     problem:
       "A manager asks 'how many hours will this take?' and the honest answer is 'I don't know until I'm partway in.' Engineers pad estimates, then miss them anyway, then get blamed. Hour-estimates pretend software is predictable when it isn't, and they collapse the moment reality diverges. How do you plan a team's work without pretending you can foresee the exact duration of every task?",
+    demo: "burndown",
     how: [
       {
         type: "para",
         text: "A sprint is a fixed timebox — commonly two weeks — during which the team commits to a set of work and aims to finish it, ending with something demonstrable. Story points estimate the relative size of a task (its complexity, effort, and uncertainty) rather than its duration in hours. Over a few sprints the team learns its velocity — how many points it typically completes — and uses that to forecast, without ever estimating in hours.",
+      },
+      {
+        type: "code",
+        code: "Story: As a shopper, I want to save items to a wishlist\n       so that I can buy them later.\n\nEstimate: 5 points   // relative size (effort + complexity + unknowns), not hours\n\nAcceptance criteria:\n- A logged-in user can add or remove any product\n- The wishlist persists across sessions\n- An empty wishlist shows a prompt to browse products\n\n// Team velocity ~24 pts/sprint -> pull ~24 pts of stories into the sprint",
+        caption:
+          "A user story sized in relative points, with acceptance criteria; the team commits up to its velocity (~24 pts), never to an hour budget.",
+      },
+      {
+        type: "demo",
+        demo: "burndown",
       },
       {
         type: "points",
@@ -1146,10 +1168,21 @@ export const batchI: TopicContent[] = [
       "The accumulating cost of quick-and-dirty choices, and the disciplined work of paying it down.",
     problem:
       "To hit a deadline, you copy-paste a function, hardcode a value, and skip the tests — 'we'll clean it up later.' It works. Months later that shortcut, multiplied across the whole codebase, means every new feature takes twice as long, every change risks breaking something unrelated, and no one dares touch the worst files. The code still runs, but the team has slowed to a crawl. How do you keep moving fast without drowning in your own past shortcuts?",
+    demo: "tech-debt",
     how: [
       {
         type: "para",
         text: "Technical debt is the future cost of choosing an easy-but-limited solution now over a better-but-slower one. Like financial debt, a small amount taken deliberately can be smart — it lets you ship and learn — but it accrues 'interest': every future change against messy code costs more. Refactoring is the disciplined act of improving code's structure without changing its behavior, which pays the debt down.",
+      },
+      {
+        type: "code",
+        code: "// BEFORE: the same logic pasted twice, with a magic number\nfunction usTotal(price) { return price + price * 0.08 }\nfunction caTotal(price) { return price + price * 0.08 }\n\n// AFTER: duplication removed, constant named -- identical output\nconst TAX_RATE = 0.08\nfunction total(price) { return price + price * TAX_RATE }",
+        caption:
+          "Refactoring improves structure without changing behavior: both versions return price * 1.08, but the second is DRY and named — and it is only safe to do under tests.",
+      },
+      {
+        type: "demo",
+        demo: "tech-debt",
       },
       {
         type: "points",

@@ -155,7 +155,10 @@ export type DemoId =
   | "branch-merge"
   | "rebase"
   | "merge-conflict"
-  | "pr-review";
+  | "pr-review"
+  | "kanban"
+  | "burndown"
+  | "tech-debt";
 
 export type ContentBlock =
   | { type: "para"; text: string }

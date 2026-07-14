@@ -155,6 +155,9 @@ import BranchMergeDemo from "@/components/demos/BranchMergeDemo";
 import RebaseDemo from "@/components/demos/RebaseDemo";
 import MergeConflictDemo from "@/components/demos/MergeConflictDemo";
 import PrReviewDemo from "@/components/demos/PrReviewDemo";
+import KanbanDemo from "@/components/demos/KanbanDemo";
+import BurndownDemo from "@/components/demos/BurndownDemo";
+import TechDebtDemo from "@/components/demos/TechDebtDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -407,6 +410,9 @@ const DEMOS = {
   "rebase": (c: string) => <RebaseDemo color={c} />,
   "merge-conflict": (c: string) => <MergeConflictDemo color={c} />,
   "pr-review": (c: string) => <PrReviewDemo color={c} />,
+  "kanban": (c: string) => <KanbanDemo color={c} />,
+  "burndown": (c: string) => <BurndownDemo color={c} />,
+  "tech-debt": (c: string) => <TechDebtDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {
