@@ -141,7 +141,15 @@ export type DemoId =
   | "rest-resource"
   | "api-auth"
   | "grpc"
-  | "graphql";
+  | "graphql"
+  | "pointers"
+  | "gc"
+  | "process-thread"
+  | "context-switch"
+  | "single-multi"
+  | "scheduling"
+  | "virtual-memory"
+  | "file-perms";
 
 export type ContentBlock =
   | { type: "para"; text: string }

@@ -141,6 +141,14 @@ import RestDemo from "@/components/demos/RestDemo";
 import ApiAuthDemo from "@/components/demos/ApiAuthDemo";
 import GrpcDemo from "@/components/demos/GrpcDemo";
 import GraphqlDemo from "@/components/demos/GraphqlDemo";
+import PointersDemo from "@/components/demos/PointersDemo";
+import GcDemo from "@/components/demos/GcDemo";
+import ProcessThreadDemo from "@/components/demos/ProcessThreadDemo";
+import ContextSwitchDemo from "@/components/demos/ContextSwitchDemo";
+import SingleMultiDemo from "@/components/demos/SingleMultiDemo";
+import SchedulingDemo from "@/components/demos/SchedulingDemo";
+import VirtualMemoryDemo from "@/components/demos/VirtualMemoryDemo";
+import FilePermsDemo from "@/components/demos/FilePermsDemo";
 import TopicGraph from "@/components/TopicGraph";
 
 export function generateStaticParams() {
@@ -379,6 +387,14 @@ const DEMOS = {
   "api-auth": (c: string) => <ApiAuthDemo color={c} />,
   "grpc": (c: string) => <GrpcDemo color={c} />,
   "graphql": (c: string) => <GraphqlDemo color={c} />,
+  "pointers": (c: string) => <PointersDemo color={c} />,
+  "gc": (c: string) => <GcDemo color={c} />,
+  "process-thread": (c: string) => <ProcessThreadDemo color={c} />,
+  "context-switch": (c: string) => <ContextSwitchDemo color={c} />,
+  "single-multi": (c: string) => <SingleMultiDemo color={c} />,
+  "scheduling": (c: string) => <SchedulingDemo color={c} />,
+  "virtual-memory": (c: string) => <VirtualMemoryDemo color={c} />,
+  "file-perms": (c: string) => <FilePermsDemo color={c} />,
 } satisfies Record<DemoId, (color: string) => React.ReactNode>;
 
 function renderDemo(id: DemoId, color: string) {

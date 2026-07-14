@@ -350,6 +350,7 @@ export const batchB: TopicContent[] = [
     tagline: "Working with the address of a value instead of copying the value itself.",
     problem:
       "You pass a big list into a function, change one element inside, and back in the caller nothing changed — the function got a copy. Or the opposite: you tweak a copy and are shocked to find the original changed too. Whether you're working with the real thing or a copy of it decides whether your edits stick, how much memory you use, and whether two parts of your code can accidentally clobber each other's data.",
+    demo: "pointers",
     how: [
       {
         type: "para",
@@ -358,6 +359,15 @@ export const batchB: TopicContent[] = [
       {
         type: "para",
         text: "Languages differ in how much of this they expose. C gives you raw pointers and pointer arithmetic. Java and Python pass object references implicitly — variables hold references, so two variables can point at the same object. Understanding whether your language copies or shares by default is essential to predicting behavior.",
+      },
+      {
+        type: "code",
+        code: "// two names, one object — a change through one is seen through the other\nconst a = { count: 0 }\nconst b = a            // b copies the address, not the object\nb.count = 5\nconsole.log(a.count)   // 5  ← a and b alias the same object\n\nlet x = 10, y = x      // numbers copy by value\ny = 99\nconsole.log(x)         // 10 ← the original is untouched\n\nconst node = null\nnode.count             // crash: dereferencing a null pointer",
+        caption: "b holds the same address as a, so a mutation through either is visible through both; a null reference crashes when dereferenced.",
+      },
+      {
+        type: "demo",
+        demo: "pointers",
       },
       {
         type: "points",
@@ -400,6 +410,7 @@ export const batchB: TopicContent[] = [
     tagline: "The runtime automatically reclaiming memory your program no longer uses.",
     problem:
       "In a language where you free memory by hand, every allocation is a promise to free it later. Forget, and you leak memory until the program dies; free too early and something else is still using it, causing a crash; free twice and you corrupt the heap. Getting this right by hand across a large program is brutally error-prone. What if the runtime could figure out when memory is no longer reachable and reclaim it for you?",
+    demo: "gc",
     how: [
       {
         type: "para",
@@ -408,6 +419,15 @@ export const batchB: TopicContent[] = [
       {
         type: "para",
         text: "The common approach is mark-and-sweep: start from the roots, mark everything reachable, then sweep away everything unmarked. Many modern collectors are generational — they exploit the fact that most objects die young, collecting the 'young generation' frequently and cheaply and the old one rarely.",
+      },
+      {
+        type: "code",
+        code: "let user = { name: \"Ada\", cart: [/* ... */] }\nuser = null            // the old object is now unreachable → GC can reclaim it\n\n// a \"leak\" GC can't fix: still reachable, so never collected\nconst cache = []\nfunction remember(x) { cache.push(x) }\nremember(bigObject)    // bigObject stays reachable via cache — kept forever",
+        caption: "Setting user = null makes the old object unreachable and collectible; anything still reachable from a root (like cache) is never freed — that is how leaks survive GC.",
+      },
+      {
+        type: "demo",
+        demo: "gc",
       },
       {
         type: "points",
@@ -448,6 +468,7 @@ export const batchB: TopicContent[] = [
     tagline: "Two ways to run things concurrently — one isolated, one shared.",
     problem:
       "Your web server needs to handle many requests at once. You could launch a whole separate program per request, but that's heavy and they can't easily share data. Or you could run many lightweight workers inside one program that share memory — fast, but now they can step on each other's data. The choice between these two shapes of concurrency affects isolation, speed, communication, and how easily one crash takes down the rest.",
+    demo: "process-thread",
     how: [
       {
         type: "para",
@@ -456,6 +477,15 @@ export const batchB: TopicContent[] = [
       {
         type: "para",
         text: "A thread is a unit of execution inside a process. A process can have many threads, and they share the same memory — the same heap, the same globals. That makes communication trivially fast (just read a shared variable) but dangerous: two threads writing the same data at once is a race condition. Threads are also cheaper to create and switch between than processes.",
+      },
+      {
+        type: "code",
+        code: "# threads share their process's memory\ncounter = 0\ndef worker():\n    global counter\n    counter += 1          # every thread mutates the SAME counter → needs a lock\nThread(target=worker).start()    # shares memory, cheap to start\n\n# a process gets its own isolated copy of memory\np = Process(target=worker)       # this counter is a separate copy\np.start()                        # heavier; sharing needs explicit IPC",
+        caption: "Threads share one memory space (fast to start, but racy without a lock); each process gets its own isolated memory (safe, but heavier and needs IPC to share).",
+      },
+      {
+        type: "demo",
+        demo: "process-thread",
       },
       {
         type: "points",
@@ -497,6 +527,7 @@ export const batchB: TopicContent[] = [
     tagline: "The cost the OS pays to pause one task and resume another on the same CPU.",
     problem:
       "A single CPU core can only run one thread at a time, yet your laptop runs hundreds of tasks that all appear to make progress at once. The OS creates that illusion by rapidly switching the core between them. But each switch isn't free — the CPU must stop mid-task, save exactly where it was, and load someone else's state. Do this too often and the machine spends more time switching than working.",
+    demo: "context-switch",
     how: [
       {
         type: "para",
@@ -505,6 +536,15 @@ export const batchB: TopicContent[] = [
       {
         type: "para",
         text: "The direct cost is the save/restore itself, but the bigger hidden cost is the CPU caches and TLB going cold: the new thread's data isn't in cache, so it runs slowly until the cache refills. Switching between threads of the same process is cheaper than between processes, because they share an address space.",
+      },
+      {
+        type: "code",
+        code: "// what the OS does on every switch (conceptually)\nsave(current.registers, current.programCounter, current.stackPointer)\nnext = scheduler.pick()\nload(next.registers, next.programCounter, next.stackPointer)\n\n// the CPU caches + TLB are now cold for `next`,\n// so it runs slowly until they refill — the hidden cost of switching",
+        caption: "Each switch saves the outgoing task's CPU state and loads the incoming one's; the resumed task then runs slowly on cold caches — pure overhead.",
+      },
+      {
+        type: "demo",
+        demo: "context-switch",
       },
       {
         type: "points",
@@ -547,6 +587,7 @@ export const batchB: TopicContent[] = [
     tagline: "Doing one thing at a time versus splitting work across several threads.",
     problem:
       "Your program has an 8-core CPU but runs on a single thread, so it uses one core while seven sit idle — a task that could finish in a minute takes eight. So you split the work across threads to use every core. But now results come back corrupted and occasionally the program hangs. Going multi-threaded can multiply your throughput or multiply your bugs, and knowing when it actually helps is the whole skill.",
+    demo: "single-multi",
     how: [
       {
         type: "para",
@@ -555,6 +596,15 @@ export const batchB: TopicContent[] = [
       {
         type: "para",
         text: "The payoff depends on the workload. CPU-bound work (heavy computation) benefits from parallelism up to the number of cores. I/O-bound work (waiting on disk, network) benefits from concurrency even on one core, because a waiting thread yields to a working one. But any data shared across threads must be synchronized, and that's where races, deadlocks, and hard-to-reproduce bugs enter.",
+      },
+      {
+        type: "code",
+        code: "// single-threaded: one core, chunks run in order — about N × time\nfor (const c of chunks) process(c)\n\n// multi-threaded: spread across cores — up to Ncores faster for CPU-bound work\nawait Promise.all(chunks.map(c => runOnWorker(process, c)))\n\n// but shared state without a lock races:\nlet total = 0\nworkers.forEach(w => w.on(\"done\", n => total += n))   // += can lose updates",
+        caption: "Spreading CPU-bound work across cores can approach an N-core speedup; but unsynchronized shared state (total += n) races and silently loses updates.",
+      },
+      {
+        type: "demo",
+        demo: "single-multi",
       },
       {
         type: "points",
@@ -597,6 +647,7 @@ export const batchB: TopicContent[] = [
     tagline: "How the OS decides which ready task gets the CPU next.",
     problem:
       "At any moment your computer may have dozens of processes ready to run and only a handful of CPU cores. Something must decide who runs, for how long, and who waits — and the choices are in tension. Let a long computation run to completion and your mouse freezes; switch too eagerly and you waste time thrashing. A video call needs the CPU on time; a batch job just needs to finish eventually. How does the OS juggle all of them fairly?",
+    demo: "scheduling",
     how: [
       {
         type: "para",
@@ -605,6 +656,15 @@ export const batchB: TopicContent[] = [
       {
         type: "para",
         text: "Different goals pull in different directions: low latency for interactive tasks, high throughput for batch work, and fairness so nothing starves. Schedulers balance these with priorities and policies — round-robin, priority queues, and fair schedulers that give each task a proportional share over time.",
+      },
+      {
+        type: "code",
+        code: "// preemptive round-robin: each ready task runs one time slice, then yields\nwhile (true) {\n  task = readyQueue.dequeue()\n  run(task, QUANTUM)            // preempted when the quantum expires\n  if (!task.finished) readyQueue.enqueue(task)   // sent to the back of the line\n}\n// priority scheduling instead lets urgent tasks jump ahead — risking starvation",
+        caption: "Round-robin gives each ready task a fixed time slice then preempts it; priority schemes let urgent tasks jump ahead, at the risk of starving low-priority ones.",
+      },
+      {
+        type: "demo",
+        demo: "scheduling",
       },
       {
         type: "points",
@@ -646,6 +706,7 @@ export const batchB: TopicContent[] = [
     tagline: "Giving every process its own private, contiguous-looking address space.",
     problem:
       "If two programs both used raw physical memory addresses, they could read and overwrite each other's data, and every program would need to know exactly which addresses were free. Worse, a program might need more memory than physically exists. Early systems had exactly these problems. How do you give each program the illusion of a large, private, orderly memory of its own, on shared and limited physical RAM?",
+    demo: "virtual-memory",
     how: [
       {
         type: "para",
@@ -654,6 +715,15 @@ export const batchB: TopicContent[] = [
       {
         type: "para",
         text: "Because the mapping is indirect, the OS can do powerful things: isolate processes (each has its own page table, so one can't address another's memory), and page out rarely-used pages to disk when RAM is full, bringing them back on demand. A reference to a page that isn't in RAM triggers a page fault, and the OS loads it.",
+      },
+      {
+        type: "code",
+        code: "// the program uses a virtual address; the CPU + OS translate it to physical RAM\npage  = virtualAddr >> 12           // which page of memory\nframe = pageTable[page]             // where that page lives in physical RAM\nif (frame === NOT_PRESENT)          // the page isn't in RAM right now\n  handlePageFault(page)             // OS loads it from disk, then retries\nphysicalAddr = frame + (virtualAddr & 0xfff)   // add the offset within the page",
+        caption: "Every virtual address is translated through the process's page table; a page that isn't resident triggers a page fault that loads it from disk.",
+      },
+      {
+        type: "demo",
+        demo: "virtual-memory",
       },
       {
         type: "points",
@@ -696,6 +766,7 @@ export const batchB: TopicContent[] = [
     tagline: "How the OS organizes files on disk and controls who can do what to them.",
     problem:
       "Your web server runs as its own user and needs to read config files but must never be able to overwrite the system binaries — because if it's compromised, you don't want the attacker to have that power either. Meanwhile a script fails with 'permission denied' and you have no idea why. Files aren't just bytes on a disk: the OS tracks who owns each one and exactly who's allowed to read, change, or run it. Getting that model wrong is a security incident.",
+    demo: "file-perms",
     how: [
       {
         type: "para",
@@ -704,6 +775,15 @@ export const batchB: TopicContent[] = [
       {
         type: "para",
         text: "When a process tries to open, modify, or run a file, the OS checks that process's user against these bits and allows or denies the action. This is the front line of OS-level security: the principle of least privilege says give each process only the access it truly needs, so a compromise does the least damage.",
+      },
+      {
+        type: "code",
+        code: "$ ls -l deploy.sh\n-rwxr-x---  1  web  staff  deploy.sh\n#  └ owner: rwx  └ group: r-x  └ others: ---   (the 9 permission bits)\n\n$ chmod 640 config.env    # owner rw- , group r-- , others ---  (6=rw 4=r 0=none)\n$ ./deploy.sh             # runs only because the owner has the execute (x) bit",
+        caption: "The nine bits after the file type give read/write/execute for owner, group, and others; chmod sets them, and a missing execute bit is a classic 'permission denied'.",
+      },
+      {
+        type: "demo",
+        demo: "file-perms",
       },
       {
         type: "points",
@@ -746,6 +826,7 @@ export const batchB: TopicContent[] = [
     tagline: "The OS primitives that keep threads from corrupting shared data when they run at once.",
     problem:
       "Two threads both increment the same counter. Each reads the value (say 5), adds one, and writes back 6 — so after two increments the counter reads 6 instead of 7. One update vanished, because incrementing isn't a single indivisible step: it's read, modify, write, and the threads interleaved. Whenever threads share data, their operations can tangle like this. The OS provides tools to force order onto that chaos.",
+    demo: "mutex",
     how: [
       {
         type: "para",
@@ -754,6 +835,15 @@ export const batchB: TopicContent[] = [
       {
         type: "para",
         text: "Other primitives coordinate in other ways. A semaphore allows up to N threads through at once (useful for limiting access to a pool). A condition variable lets a thread sleep until another signals that some condition is true. For simple counters, atomic operations do the read-modify-write as one indivisible hardware instruction, no lock needed.",
+      },
+      {
+        type: "code",
+        code: "// without a lock, count += 1 (read-modify-write) can interleave and lose updates\nmutex.lock()             // only one thread gets past here at a time\ncount += 1               // critical section — atomic w.r.t. other threads\nmutex.unlock()\n\n// deadlock: each thread holds one lock and waits for the other's, forever\n// T1: lock(A); lock(B)        T2: lock(B); lock(A)",
+        caption: "The mutex serializes the read-modify-write so no update is lost; but acquiring two locks in opposite orders is exactly how deadlock arises.",
+      },
+      {
+        type: "demo",
+        demo: "mutex",
       },
       {
         type: "points",
